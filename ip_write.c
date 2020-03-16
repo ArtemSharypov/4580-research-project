@@ -213,6 +213,10 @@ size_t data_len;
 		bf_afree(data);
 		return r;
 	}
+
+	// TODO add the check for if we should filter out the packet here
+	// if we shoud filter out, simply call return
+
 	ip_hdr_chksum(ip_hdr, hdr_len);
 
 	data= bf_packIffLess(data, IP_MIN_HDR_SIZE);

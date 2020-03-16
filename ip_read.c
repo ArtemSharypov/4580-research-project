@@ -648,6 +648,9 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 	 * point-to-point.
 	 */
 
+	// TODO add the check for if we should filter out the packet here
+	// if we shoud filter out, simply call return
+
 	dest= ip_hdr->ih_dst;
 
 	if (dest == ip_port->ip_ipaddr)
@@ -779,6 +782,9 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		bf_afree(pack);
 		return;
 	}
+
+	// TODO add the check for if we should filter out the packet here
+	// if we shoud filter out, simply call return
 
 	ip_port_arrive (ip_port, pack, ip_hdr);
 }

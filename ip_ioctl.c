@@ -35,11 +35,13 @@ ioreq_t req;
 	nwio_ipconf2_t *ipconf2;
 	nwio_ipconf_t *ipconf;
 	nwio_route_t *route_ent;
+	firewall_policy_t firewall_policy;
 	acc_t *data;
 	int result;
 	unsigned int new_en_flags, new_di_flags,
 		old_en_flags, old_di_flags;
 	unsigned long new_flags;
+	int *delete_policy_num;
 	int ent_no, r;
 	nwio_ipconf_t ipconf_var;
 
@@ -441,6 +443,51 @@ ioreq_t req;
 		assert (result != SUSPEND);
 		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd, result,
 			(acc_t *)0, TRUE);
+
+	case FIREWALLPOLICYADD:
+		data = (*ip_fd->if_get_userdata)(ip_fd->if_srfd,
+			0, sizeof(firewall_policy_t), TRUE);
+		if (data == NULL)
+		{
+			return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
+				EFAULT, NULL, TRUE);
+		}
+
+		data = bf_packIffLess (data, sizeof(firewall_policy_t) );
+		firewall_policy = (firewall_policy_t *) ptr2acc_data(data);
+		
+		// todo call add policy function here
+		result = 0;
+		bf_afree(data);
+
+		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
+			result, (acc_t *)0, TRUE);
+
+	case FIREWALLPOLICYREMOVE:
+		data = (*ip_fd->if_get_userdata)(ip_fd->if_srfd,
+			0, sizeof(int), TRUE);
+		if (data == NULL)
+		{
+			return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
+				EFAULT, NULL, TRUE);
+		}
+
+		data = bf_packIffLess (data, sizeof(int) );
+		delete_policy_num = (int *) ptr2acc_data(data);
+		
+		// todo call delete policy function here
+		result = 0;
+		bf_afree(data);
+
+		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
+			result, (acc_t *)0, TRUE);
+
+	case FIREWALLPOLICYPRINT:
+		// todo call print policies function here
+		result = 0;
+
+		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
+			result, (acc_t *)0, TRUE);
 
 	default:
 		break;
