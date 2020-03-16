@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "policy_filter.h"
 
 // todo this will be the thing that contains functions for adding to, deleting from, printing the policies and 
@@ -9,7 +11,7 @@
 // todo define a head for the list of policies
 
 // todo add parameters (copy from header)
-int add_policy() 
+int add_policy(firewall_policy_t policy) 
 {
     //todo implement
 
@@ -25,7 +27,7 @@ int delete_policy(int policy_num)
 
 int print_all_policies()
 {
-    // todo implement, simply print all of the policies that exist
+    // todo implement, needs to return a string to user space somehow
     // including a descriptive title above, and the number that represents that policy
     return 0;
 }

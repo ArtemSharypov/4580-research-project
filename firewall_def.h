@@ -1,6 +1,8 @@
 
-#ifndef __FIREWALL_CONFIG_H__
-#def __FIREWALL_CONFIG_H__
+#ifndef FIREWALL_DEF_H
+#define FIREWALL_DEF_H
+
+#include <sys/types.h>
 
 #define ALL 0
 #define UDP 1

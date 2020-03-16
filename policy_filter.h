@@ -1,8 +1,9 @@
 #ifndef POLICY_FILTER_H
 #define POLICY_FILTER_H
 
-// todo add parameters
-int add_policy();
+#include <net/gen/firewall_def.h>
+
+int add_policy(firewall_policy_t policy);
 
 int delete_policy(int policy_num);
 

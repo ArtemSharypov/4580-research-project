@@ -16,6 +16,7 @@ Copyright 1995 Philip Homburg
 #include "ip.h"
 #include "ip_int.h"
 #include "ipr.h"
+#include "policy_filter.h"
 
 THIS_FILE
 
@@ -35,7 +36,7 @@ ioreq_t req;
 	nwio_ipconf2_t *ipconf2;
 	nwio_ipconf_t *ipconf;
 	nwio_route_t *route_ent;
-	firewall_policy_t firewall_policy;
+	firewall_policy_t *firewall_policy;
 	acc_t *data;
 	int result;
 	unsigned int new_en_flags, new_di_flags,
@@ -457,7 +458,7 @@ ioreq_t req;
 		firewall_policy = (firewall_policy_t *) ptr2acc_data(data);
 		
 		// todo call add policy function here
-		result = 0;
+		result = add_policy(*firewall_policy);
 		bf_afree(data);
 
 		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
@@ -476,7 +477,7 @@ ioreq_t req;
 		delete_policy_num = (int *) ptr2acc_data(data);
 		
 		// todo call delete policy function here
-		result = 0;
+		result = delete_policy(*delete_policy_num);
 		bf_afree(data);
 
 		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
@@ -484,7 +485,7 @@ ioreq_t req;
 
 	case FIREWALLPOLICYPRINT:
 		// todo call print policies function here
-		result = 0;
+		result = print_all_policies();
 
 		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
 			result, (acc_t *)0, TRUE);

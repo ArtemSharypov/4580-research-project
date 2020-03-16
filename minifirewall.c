@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,24 +29,28 @@ int main(int argc, char *argv[])
 {
     firewall_policy_t policy;
     int ip_fd, result;
+    char *ip_device = ip_device= getenv("IP_DEVICE");
+    
+    if (!ip_device)
+        ip_device= IP_DEVICE;
     
     if (argc < 2) 
     {
         //todo remove this printf later
         printf("invalid usage \n");
         usage();   
+        exit(1);
     }
 
     ip_fd= open(ip_device, O_RDWR);
 
 	if (ip_fd == -1)
 	{
-		fprintf(stderr, "%s: unable to open('%s'): %s\n",
-			prog_name, ip_device, strerror(errno));
+		fprintf(stderr, "minifirewall: unable to open('%s'): %s\n", ip_device, strerror(errno));
 		exit(1);
 	}
 
-    if (strcmp(argv[1], ADD_IN_POLICY) == 0 || strcmp(argv[1], ADD_OUT_POLICY == 0)) 
+    if (strcmp(argv[1], ADD_IN_POLICY) == 0 || strcmp(argv[1], ADD_OUT_POLICY) == 0) 
     {
         // policy is for in or outgoing packets
         printf ("out/ingoing packet applied to policy \n");
@@ -55,7 +60,7 @@ int main(int argc, char *argv[])
         policy.protocol = ALL;
 
         //fake ioctl call
-        result = iotcl(ip_fd, FIREWALLPOLICYADD, &policy);
+        result = ioctl(ip_fd, FIREWALLPOLICYADD, &policy);
 
         if (result == -1 ){ 
             printf("failed ioctl call \n");
@@ -70,7 +75,7 @@ int main(int argc, char *argv[])
         int policyNumToRemove = 5;
 
         //fake ioctl call
-        result = iotcl(ip_fd, FIREWALLPOLICYREMOVE, &policyNumToRemove);
+        result = ioctl(ip_fd, FIREWALLPOLICYREMOVE, &policyNumToRemove);
 
         if (result == -1 ){ 
             printf("failed ioctl call \n");
@@ -85,7 +90,7 @@ int main(int argc, char *argv[])
 
         //fake ioctl call
         //todo check if we can do NULL
-        result = iotcl(ip_fd, FIREWALLPOLICYPRINT, NULL);
+        result = ioctl(ip_fd, FIREWALLPOLICYPRINT, NULL);
 
         if (result == -1 ){ 
             printf("failed ioctl call \n");
@@ -100,5 +105,5 @@ int main(int argc, char *argv[])
         usage();
     }
 
-    return 0;
+    return(0);
 }
