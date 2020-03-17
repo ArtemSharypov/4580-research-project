@@ -9,6 +9,12 @@
 #include <unistd.h>
 
 #include <net/gen/firewall_def.h>
+#include <net/hton.h>
+#include <net/netlib.h>
+#include <netdb.h>
+#include <net/gen/in.h>
+#include <net/gen/inet.h>
+#include <net/gen/ip_io.h>
 
 #define ADD_IN_POLICY "--in"
 #define ADD_OUT_POLICY "--out"
@@ -55,8 +61,8 @@ int main(int argc, char *argv[])
         // policy is for in or outgoing packets
         printf ("out/ingoing packet applied to policy \n");
 
-        policy.is_ingoing_packet = 1;
-        policy.block = 1;
+        policy.packet_type = INGOING_PACKET;
+        policy.action = BLOCK;
         policy.protocol = ALL;
 
         //fake ioctl call

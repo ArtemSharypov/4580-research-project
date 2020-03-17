@@ -18,6 +18,7 @@ Copyright 1995 Philip Homburg
 #include "ip.h"
 #include "ip_int.h"
 #include "ipr.h"
+#include "policy_filter.h"
 
 THIS_FILE
 
@@ -214,8 +215,11 @@ size_t data_len;
 		return r;
 	}
 
-	// TODO add the check for if we should filter out the packet here
-	// if we shoud filter out, simply call return
+	// TODO add parameters to this
+	if (should_block_outgoing_packet())
+	{
+		return NW_OK;
+	}
 
 	ip_hdr_chksum(ip_hdr, hdr_len);
 

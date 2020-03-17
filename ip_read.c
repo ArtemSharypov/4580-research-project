@@ -17,6 +17,7 @@ Copyright 1995 Philip Homburg
 #include "ip_int.h"
 #include "ipr.h"
 #include "sr.h"
+#include "policy_filter.h"
 
 THIS_FILE
 
@@ -648,8 +649,11 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 	 * point-to-point.
 	 */
 
-	// TODO add the check for if we should filter out the packet here
-	// if we shoud filter out, simply call return
+	// TODO add parameters to this
+	if (should_block_ingoing_packet())
+	{
+		return;
+	}
 
 	dest= ip_hdr->ih_dst;
 
