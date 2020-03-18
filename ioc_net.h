@@ -86,7 +86,7 @@ struct msg_control
 
 #define FIREWALLPOLICYADD _IOW('n', 82, struct firewall_policy)
 #define FIREWALLPOLICYREMOVE _IOW('n', 83, int)
-#define FIREWALLPOLICYPRINT _IOW('n', 84, int)
+#define FIREWALLPOLICYPRINT _IOR('n', 84, struct policies)
 
 /* setsockopt/setsockopt for unix domain sockets */
 #define NWIOGUDSSOTYPE	 _IOR('n', 90, int)		  /* SO_TYPE */

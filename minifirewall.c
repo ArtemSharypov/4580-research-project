@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
         policy.action = BLOCK;
         policy.protocol = ALL;
 
-        //fake ioctl call
         result = ioctl(ip_fd, FIREWALLPOLICYADD, &policy);
 
         if (result == -1 ){ 
@@ -80,7 +79,6 @@ int main(int argc, char *argv[])
 
         int policyNumToRemove = 5;
 
-        //fake ioctl call
         result = ioctl(ip_fd, FIREWALLPOLICYREMOVE, &policyNumToRemove);
 
         if (result == -1 ){ 
@@ -94,9 +92,13 @@ int main(int argc, char *argv[])
         // print policies
         printf("print the policies \n");
 
-        //fake ioctl call
-        //todo check if we can do NULL
-        result = ioctl(ip_fd, FIREWALLPOLICYPRINT, NULL);
+        policies_t policies;
+
+        result = ioctl(ip_fd, FIREWALLPOLICYPRINT, &policies);
+
+        printf("number of policies is %d \n", policies.num_policies);
+        printf("values of first is %d and %d and %d \n", policies.policies[0].packet_type, policies.policies[0].action, policies.policies[0].protocol);
+        printf("values of second is %d and %d and %d \n", policies.policies[1].packet_type, policies.policies[1].action, policies.policies[1].protocol);
 
         if (result == -1 ){ 
             printf("failed ioctl call \n");

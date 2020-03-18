@@ -37,6 +37,7 @@ ioreq_t req;
 	nwio_ipconf_t *ipconf;
 	nwio_route_t *route_ent;
 	firewall_policy_t *firewall_policy;
+	policies_t *policies;
 	acc_t *data;
 	int result;
 	unsigned int new_en_flags, new_di_flags,
@@ -476,7 +477,6 @@ ioreq_t req;
 		data = bf_packIffLess (data, sizeof(int) );
 		delete_policy_num = (int *) ptr2acc_data(data);
 		
-		// todo call delete policy function here
 		result = delete_policy(*delete_policy_num);
 		bf_afree(data);
 
@@ -484,8 +484,11 @@ ioreq_t req;
 			result, (acc_t *)0, TRUE);
 
 	case FIREWALLPOLICYPRINT:
-		// todo call print policies function here
-		result = print_all_policies();
+		data= bf_memreq(sizeof(policies_t));
+		policies = (policies_t *)ptr2acc_data(data);
+
+		result = get_policies(policies);
+		result = (*ip_fd->if_put_userdata)(ip_fd->if_srfd, 0, data, TRUE);
 
 		return (*ip_fd->if_put_userdata)(ip_fd->if_srfd,
 			result, (acc_t *)0, TRUE);

@@ -7,7 +7,7 @@ int add_policy(firewall_policy_t policy);
 
 int delete_policy(int policy_num);
 
-int print_all_policies();
+int get_policies(policies_t *policies);
 
 // todo add parameters, these would be everything that identifies a packet such as the protocol
 // and the different ip addresses and such

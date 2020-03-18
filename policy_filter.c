@@ -3,42 +3,76 @@
 
 #include "policy_filter.h"
 
+typedef struct policy_node {
+    firewall_policy_t policy;
+    struct policy_node *next_policy;
+} policy_node_t;
 
-// todo this will be the thing that contains functions for adding to, deleting from, printing the policies and 
-// for checking if a packet should be filtered
+policy_node_t *policies_head = NULL; // head of the list of the firewall policies
 
-// todo define the struct for storing a policy
-// todo define the node struct for storing a list of policies
+int total_num_policies = 0;
 
-// todo define a head for the list of policies
-
-int totalNumPolicies = 0;
-
-// todo add parameters (copy from header)
 int add_policy(firewall_policy_t policy) 
 {
     //todo implement 
     // add the policy to the end of the list or whatever.
 
-    totalNumPolicies++;
+    // malloc a new policy_node_t
+    // then copy values over from this policy into that one
+    
+    if (policies_head == NULL) 
+    {
+        // set it to be head
+    }
+    else 
+    {
+        // otherwise traverse everything and add it to the end 
+    }
+
+    total_num_policies++;
 
     return 0;
 }
 
 int delete_policy(int policy_num)
 {  
-    // todo implement
-    // simply remove the policy from list or whatever.
+    if (policy_num <= total_num_policies)
+    {
+         // todo implement
+        // simply remove the policy from list or whatever.
+    }
 
-    totalNumPolicies--;
+    total_num_policies--;
 
     return 0;
 }
 
-int print_all_policies()
+int get_policies(policies_t *policies)
 {
+    policies->num_policies = 5;
+
+    firewall_policy_t policy;
+
+    policy.packet_type = 2;
+    policy.action = 2;
+    policy.protocol = 2;
+
+    firewall_policy_t two;
+
+    policy.packet_type = 3;
+    policy.action = 3;
+    policy.protocol = 3;
+
+    // todo for these, it probably needs to have values set on the policies in the array
+    // or malloced instead of this
+    policies->policies[0] = policy;
+    policies->policies[1] = two;
+
     // todo implement, needs to return a struct containing an array? of policies to user space somehow
     // let user space program print it all out and such
+
+
+
     return 0;
 }
 
@@ -61,14 +95,22 @@ int should_block_packet(int is_ingoing_packet)
 
     int stuff = IPPROTO_ICMP;
 
-    return totalNumPolicies > 0;
+    return total_num_policies > 0;
 }
 
+// todo add parameters, these would be everything that identifies a packet such as the protocol
+// and the different ip addresses and such
+// copy from the header
+// returns 0 if false, 1 otherwise 
 int should_block_ingoing_packet() 
 {
     return should_block_packet(1);
 }
 
+// todo add parameters, these would be everything that identifies a packet such as the protocol
+// and the different ip addresses and such
+// copy from the header
+// returns 0 if false, 1 otherwise 
 int should_block_outgoing_packet()
 {
     return should_block_packet(0);
