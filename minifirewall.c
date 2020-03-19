@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         // delete policy
         printf("delete the specified policy \n");
 
-        int policyNumToRemove = 5;
+        int policyNumToRemove = 1;
 
         result = ioctl(ip_fd, FIREWALLPOLICYREMOVE, &policyNumToRemove);
 
@@ -96,10 +96,16 @@ int main(int argc, char *argv[])
 
         result = ioctl(ip_fd, FIREWALLPOLICYPRINT, &policies);
 
-        printf("number of policies is %d \n", policies.num_policies);
-        printf("values of first is %d and %d and %d \n", policies.policies[0].packet_type, policies.policies[0].action, policies.policies[0].protocol);
-        printf("values of second is %d and %d and %d \n", policies.policies[1].packet_type, policies.policies[1].action, policies.policies[1].protocol);
+        int i;
 
+        printf("number of policies is %d \n", policies.num_policies);
+
+        for (i = 0; i < policies.num_policies; i++) 
+        {
+            printf("num is %d \n", i);
+            printf("values of first is %d and %d and %d \n", policies.policies[i].packet_type, policies.policies[i].action, policies.policies[i].protocol);
+        }
+        
         if (result == -1 ){ 
             printf("failed ioctl call \n");
         }

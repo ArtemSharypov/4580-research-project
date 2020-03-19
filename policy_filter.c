@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <net/gen/in.h>
 
 #include "policy_filter.h"
 
 typedef struct policy_node {
     firewall_policy_t policy;
-    struct policy_node *next_policy;
+    struct policy_node *next_node;
 } policy_node_t;
 
 policy_node_t *policies_head = NULL; // head of the list of the firewall policies
@@ -14,19 +15,38 @@ int total_num_policies = 0;
 
 int add_policy(firewall_policy_t policy) 
 {
-    //todo implement 
-    // add the policy to the end of the list or whatever.
+    policy_node_t *node = malloc(sizeof(policy_node_t));
+    node->next_node = NULL;
 
-    // malloc a new policy_node_t
-    // then copy values over from this policy into that one
+    // copy over the data from the policy
+    firewall_policy_t next_policy = node->policy;
+    next_policy.src_ip_addr = policy.src_ip_addr;
+    next_policy.src_netmask = policy.src_netmask;
+    next_policy.dest_ip_addr = policy.dest_ip_addr;
+    next_policy.dest_netmask = policy.dest_netmask;
+    next_policy.dest_port = policy.dest_port;
+    next_policy.src_port = policy.src_port;
+    next_policy.packet_type = policy.packet_type;
+    next_policy.action = policy.action;
+    next_policy.protocol = policy.protocol;
+
+    node->policy = next_policy;
     
     if (policies_head == NULL) 
     {
-        // set it to be head
+        policies_head = node;
     }
     else 
-    {
-        // otherwise traverse everything and add it to the end 
+    {   
+        // Add the policy to the end of the list
+        policy_node_t *curr_node = policies_head;
+
+        while (curr_node->next_node != NULL)
+        {
+            curr_node = curr_node->next_node;
+        }
+
+        curr_node->next_node = node;
     }
 
     total_num_policies++;
@@ -38,40 +58,78 @@ int delete_policy(int policy_num)
 {  
     if (policy_num <= total_num_policies)
     {
-         // todo implement
-        // simply remove the policy from list or whatever.
-    }
+        // Delete the policy at the specified policy_num
+        if (policy_num == 1) 
+        {
+            // if policy_num is 1, then thats the first entry in the list which will be the head of the list
+            policy_node_t *next_node = policies_head->next_node;
 
-    total_num_policies--;
+            free(policies_head);
+
+            policies_head = next_node;
+        }
+        else
+        {
+            policy_node_t *curr_node = policies_head;
+            policy_node_t *prev_node = NULL;
+            int node_num = 1;
+
+            while (curr_node->next_node != NULL && node_num < policy_num)
+            {
+                prev_node = curr_node;
+                curr_node = curr_node->next_node;
+                node_num++;
+            }
+
+            // Remove the node, update the pointer for the node before it, and free the memory
+            prev_node->next_node = curr_node->next_node;
+            free(curr_node);
+        }
+
+        total_num_policies--;
+    }
 
     return 0;
 }
 
 int get_policies(policies_t *policies)
 {
-    policies->num_policies = 5;
+    int num_policies_to_return = MAX_NUM_POLICIES_TO_RETURN;
 
+    // Only return MAX_NUM_POLICIES_TO_RETURN number of policies at most
+    if (num_policies_to_return > total_num_policies)
+    {
+        num_policies_to_return = total_num_policies;
+    }
+
+    policies->num_policies = num_policies_to_return;
+
+    int curr_policy_num = 0;
+    policy_node_t *curr_node = policies_head;
+    firewall_policy_t curr_policy;
     firewall_policy_t policy;
 
-    policy.packet_type = 2;
-    policy.action = 2;
-    policy.protocol = 2;
+    while (curr_node != NULL && curr_policy_num < num_policies_to_return)
+    {
+        curr_policy = curr_node->policy;
+        policy = policies->policies[curr_policy_num];
 
-    firewall_policy_t two;
+        // Copy over the policy details
+        policy.packet_type = curr_policy.packet_type;
+        policy.action = curr_policy.action;
+        policy.protocol = curr_policy.protocol;
+        policy.src_ip_addr = curr_policy.src_ip_addr;
+        policy.src_netmask = curr_policy.src_netmask;
+        policy.dest_ip_addr = curr_policy.dest_ip_addr;
+        policy.dest_netmask = curr_policy.dest_netmask;
+        policy.dest_port = curr_policy.dest_port;
+        policy.src_port = curr_policy.src_port;
 
-    policy.packet_type = 3;
-    policy.action = 3;
-    policy.protocol = 3;
+        policies->policies[curr_policy_num] = policy;
 
-    // todo for these, it probably needs to have values set on the policies in the array
-    // or malloced instead of this
-    policies->policies[0] = policy;
-    policies->policies[1] = two;
-
-    // todo implement, needs to return a struct containing an array? of policies to user space somehow
-    // let user space program print it all out and such
-
-
+        curr_node = curr_node->next_node;
+        curr_policy_num++;
+    }
 
     return 0;
 }

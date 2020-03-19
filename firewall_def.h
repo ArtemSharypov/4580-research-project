@@ -17,6 +17,9 @@
 
 #define VALUE_NOT_SET 0
 
+// Max number of policies that can be returned within policies_t due to the size restrictions
+#define MAX_NUM_POLICIES_TO_RETURN 10
+
 typedef struct firewall_policy 
 {
     u32_t src_ip_addr;
@@ -32,7 +35,7 @@ typedef struct firewall_policy
 
 typedef struct policies
 {
-    firewall_policy_t policies[15];
+    firewall_policy_t policies[MAX_NUM_POLICIES_TO_RETURN];
     int num_policies;
 } policies_t;
 
