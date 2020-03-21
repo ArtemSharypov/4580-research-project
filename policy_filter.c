@@ -134,42 +134,85 @@ int get_policies(policies_t *policies)
     return 0;
 }
 
-// todo add parameters, these would be everything that identifies a packet such as the protocol
-// and the different ip addresses and such
-// copy from the header
-// returns 0 if false, 1 otherwise 
-int should_block_packet(int is_ingoing_packet)
+int has_diff_packet_type(int policy_packet_type, int packet_type) 
 {
-    // todo implement
+    return policy_packet_type != packet_type;
+}
 
+int has_diff_protocol(int policy_protocol, int packet_protocol)
+{
+    return policy_protocol != ALL && policy_protocol != packet_protocol;
+}
+
+// Can be source or destination port
+int has_diff_port(int policy_port, int packet_port)
+{
+    return policy_port != VALUE_NOT_SET && policy_port != packet_port;
+}
+
+// Can be source or destination IP address & netmask
+int has_diff_ip_addr(u32_t policy_ip_addr, u32_t policy_netmask, u32_t packet_ip_addr)
+{
+    if (policy_ip_addr != VALUE_NOT_SET) 
+    {
+        if (policy_netmask != VALUE_NOT_SET)
+        {
+            // Apply netmask to both ip addresses and return if they're equal or not
+            return (policy_ip_addr & policy_netmask) != (packet_ip_addr & policy_netmask);
+        } 
+        else 
+        {
+            return policy_ip_addr != packet_ip_addr;
+        }
+    }
+    
+    return 0;
+}
+
+// returns 0 if false, 1 otherwise 
+int should_block_packet(int packet_type, int protocol, int src_port, int dest_port, u32_t src_ip_addr, u32_t dest_ip_addr)
+{
     // protocols are defined as the following (which come from IP side)
     // IPPROTO_ICMP 1
     // IPPROTO_TCP 6
     // IPPROTO_UDP 17
 
-    // go through each policy and compare them, maybe use small helper function to make it easier to understand
-    // the newest policy (the one at the end of the list) would be the one that decides if something is blocked or not
-    // ie if there is an unblock for a type at the end of the list after a block, then we won't block the packet
+    policy_node_t *curr_node;
+    firewall_policy_t policy;
+    int block = 0;
 
-    int stuff = IPPROTO_ICMP;
+    // go through every policy and compare them
+    // todo comment this better
+    for (curr_node = policies_head; curr_node != NULL; curr_node = curr_node->next_node)
+    {
+        policy = curr_node->policy;
 
-    return total_num_policies > 0;
+        // If the packet has any differing values compared to the policy, then the policy would not apply
+        // therefore we can move onto the next policy
+        if (has_diff_packet_type(policy.packet_type, packet_type) ||
+            has_diff_protocol(policy.protocol, protocol) ||
+            has_diff_port(policy.src_port, src_port) ||
+            has_diff_port(policy.dest_port, dest_port) ||
+            has_diff_ip_addr(policy.src_ip_addr, policy.src_netmask, src_ip_addr) ||
+            has_diff_ip_addr(policy.dest_ip_addr, policy.dest_netmask, dest_ip_addr))
+        {
+            continue;
+        }
+
+        block = policy.action;
+    }
+
+    return block;
 }
 
-// todo add parameters, these would be everything that identifies a packet such as the protocol
-// and the different ip addresses and such
-// copy from the header
 // returns 0 if false, 1 otherwise 
-int should_block_ingoing_packet() 
+int should_block_ingoing_packet(int protocol, int src_port, int dest_port, u32_t src_ip_addr, u32_t dest_ip_addr) 
 {
-    return should_block_packet(1);
+    return should_block_packet(INGOING_PACKET, protocol, src_port, dest_port, src_ip_addr, dest_ip_addr);
 }
 
-// todo add parameters, these would be everything that identifies a packet such as the protocol
-// and the different ip addresses and such
-// copy from the header
 // returns 0 if false, 1 otherwise 
-int should_block_outgoing_packet()
+int should_block_outgoing_packet(int protocol, int src_port, int dest_port, u32_t src_ip_addr, u32_t dest_ip_addr)
 {
-    return should_block_packet(0);
+    return should_block_packet(OUTGOING_PACKET, protocol, src_port, dest_port, src_ip_addr, dest_ip_addr);
 }

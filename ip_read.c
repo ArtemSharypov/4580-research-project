@@ -649,8 +649,15 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 	 * point-to-point.
 	 */
 
-	// TODO add parameters to this
-	if (should_block_ingoing_packet())
+	// TODO remove these once others are set
+	int tempProtocol = 1;
+	int tempSrcPort = 100;
+	int tempDestPort = 100;
+	u32_t tempSrcIpAddr = 100;
+	u32_t tempDestIpAddr = 100;
+
+	// TODO add the correct parameters to this
+	if (should_block_ingoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
 	{
 		return;
 	}
@@ -787,8 +794,18 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		return;
 	}
 
-	// TODO add the check for if we should filter out the packet here
-	// if we shoud filter out, simply call return
+	// TODO remove these once others are set
+	int tempProtocol = 1;
+	int tempSrcPort = 100;
+	int tempDestPort = 100;
+	u32_t tempSrcIpAddr = 100;
+	u32_t tempDestIpAddr = 100;
+
+	// TODO add the correct parameters to this
+	if (should_block_ingoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
+	{
+		return;
+	}
 
 	ip_port_arrive (ip_port, pack, ip_hdr);
 }

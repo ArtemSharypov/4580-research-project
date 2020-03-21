@@ -61,9 +61,28 @@ int main(int argc, char *argv[])
         // policy is for in or outgoing packets
         printf ("out/ingoing packet applied to policy \n");
 
-        policy.packet_type = INGOING_PACKET;
         policy.action = BLOCK;
-        policy.protocol = ALL;
+
+        // protocols are defined as the following (which come from IP side)
+        // IPPROTO_ICMP 1
+        // IPPROTO_TCP 6
+        // IPPROTO_UDP 17
+        policy.protocol = IPPROTO_ICMP;
+
+        policy.src_ip_addr = 0;
+        policy.src_netmask = 0;
+        policy.dest_ip_addr = 0;
+        policy.dest_netmask = 0;
+        policy.dest_port = 0;
+        policy.src_port = 0;
+
+        // Simply for testing purposes
+        if (strcmp(argv[1], ADD_IN_POLICY) == 0) {
+            policy.packet_type = INGOING_PACKET;
+        } else if (strcmp(argv[1], ADD_OUT_POLICY) == 0)
+        {
+            policy.packet_type = OUTGOING_PACKET;
+        }
 
         result = ioctl(ip_fd, FIREWALLPOLICYADD, &policy);
 

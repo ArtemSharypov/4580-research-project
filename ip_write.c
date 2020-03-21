@@ -215,8 +215,15 @@ size_t data_len;
 		return r;
 	}
 
-	// TODO add parameters to this
-	if (should_block_outgoing_packet())
+	// TODO remove these once others are set
+	int tempProtocol = 1;
+	int tempSrcPort = 100;
+	int tempDestPort = 100;
+	u32_t tempSrcIpAddr = 100;
+	u32_t tempDestIpAddr = 100;
+
+	// TODO add the correct parameters to this
+	if (should_block_outgoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
 	{
 		return NW_OK;
 	}
