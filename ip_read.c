@@ -657,6 +657,8 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 	u32_t tempDestIpAddr = 100;
 
 	// TODO add the correct parameters to this
+	// Check if we should block the specific ingoing packet or not based on the current firewall policies
+	// If so, then exit this function
 	if (should_block_ingoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
 	{
 		return;
@@ -802,6 +804,8 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 	u32_t tempDestIpAddr = 100;
 
 	// TODO add the correct parameters to this
+	// Check if we should block the specific ingoing packet or not based on the current firewall policies
+	// If so, then exit this function
 	if (should_block_ingoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
 	{
 		return;

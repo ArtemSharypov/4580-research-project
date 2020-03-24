@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
         // IPPROTO_ICMP 1
         // IPPROTO_TCP 6
         // IPPROTO_UDP 17
+        // and for ALL use IPPROTO_ALL
         policy.protocol = IPPROTO_ICMP;
 
         policy.src_ip_addr = 0;

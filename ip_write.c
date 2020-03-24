@@ -223,6 +223,8 @@ size_t data_len;
 	u32_t tempDestIpAddr = 100;
 
 	// TODO add the correct parameters to this
+	// Check if we should block the outgoing packet or not based on the current firewall policies
+	// If so, exit the function
 	if (should_block_outgoing_packet(tempProtocol, tempSrcPort, tempDestPort, tempSrcIpAddr, tempDestIpAddr))
 	{
 		return NW_OK;

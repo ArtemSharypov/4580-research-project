@@ -458,7 +458,6 @@ ioreq_t req;
 		data = bf_packIffLess (data, sizeof(firewall_policy_t) );
 		firewall_policy = (firewall_policy_t *) ptr2acc_data(data);
 		
-		// todo call add policy function here
 		result = add_policy(*firewall_policy);
 		bf_afree(data);
 
