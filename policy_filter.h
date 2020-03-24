@@ -25,6 +25,6 @@ int should_block_ingoing_packet(int protocol, int src_port, int dest_port, u32_t
 
 // Used to check if a packet should be blocked based on the policies within the firewall and the packet parameters passed in.
 // Returns 1 if the packet should be blocked, or 0 if the packet should NOT be blocked.
-int should_block_outgoing_packet(int protocol, int src_port, int dest_port, u32_t src_ip_addr, u32_t dest_ip_addr;
+int should_block_outgoing_packet(int protocol, int src_port, int dest_port, u32_t src_ip_addr, u32_t dest_ip_addr);
 
 #endif
