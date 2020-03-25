@@ -13,7 +13,7 @@
 
 // Packet Action, if a packet should be blocked or unblocked
 #define BLOCK 1
-#define UNBLOCK 0
+#define UNBLOCK 2
 
 // Default value, indicates that the specified variable of the policy was not set
 #define VALUE_NOT_SET 0

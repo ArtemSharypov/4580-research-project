@@ -17,12 +17,11 @@
 #include <net/gen/inet.h>
 #include <net/gen/ip_io.h>
 
+// Definitions for the available commands
 #define ADD_IN_POLICY "--in" // Add policy to ingoing packets
 #define ADD_OUT_POLICY "--out" // Add policy to outgoing packets
 #define DELETE_POLICY "--delete" // Delete a policy
 #define PRINT_POLICIES "--print" // Print the policies
-#define ACTION_BLOCK "BLOCK" // Block packet action
-#define ACTION_UNBLOCK "UNBLOCK" // Unblock packet action
 
 // Position of where the command must be within arguments, for adding / deleting / printing policies
 #define ARGS_EXPECTED_COMMAND_POS 1 
@@ -31,6 +30,24 @@
 #define NUM_ARGS_DELETE_COMMAND 3 // Number of expected arguments for a delete a policy 
 #define NUM_ARGS_PRINT_COMMAND 2 // Number of expected arguments for printing policies
 #define MIN_NUM_ARGS_ADD_COMMAND 6 // Minimum number of expected arguments for adding a new policy
+
+// Definitions for the values that indicate a criteria when parsing input to add a new policy 
+#define PROTO "--proto" // Indicates the next value is for the protocol
+#define ACTION "--action" // Indicates the next value is for the action 
+#define SRC_IP "--srcip" // Indicates the next value is for the source IP address
+#define SRC_NETMASK "--srcnetmask"  // Indicates the next value is for the source netmask
+#define SRC_PORT "--srcport" // Indicates the next value is for the source port
+#define DEST_IP "--destip" // Indicates the next value is for the destination IP address
+#define DEST_NETMASK "--destnetmask" // Indicates the next value is for the destination netmask
+#define DEST_PORT "--destport" // Indicates the next value is for the destination port
+
+// Definitions for the strings that define a protocol, or type of action for a policy
+#define PROTO_ALL "ALL" // Policy applies to ALL protocols
+#define PROTO_TCP "TCP" // Policy applies to TCP only
+#define PROTO_UDP "UDP" // Policy applies to UDP only
+#define PROTO_ICMP "ICMP" // Policy applies to ICMP only
+#define ACTION_BLOCK "BLOCK" // Block packet action
+#define ACTION_UNBLOCK "UNBLOCK" // Unblock packet action
 
 // Helper function for getting the ip file descriptor.
 // Returns the file descriptor as an int.
@@ -125,15 +142,15 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
         return;
     }
 
-    int i;
-    firewall_policy_t curr_policy;
-    char ip_addr[INET_ADDRSTRLEN];
-    char netmask[INET_ADDRSTRLEN];
-
     if (policies.num_policies == 0)
     {
         printf("Firewall currently has no policies configured \n");
     }
+
+    int i;
+    firewall_policy_t curr_policy;
+    char ip_addr[INET_ADDRSTRLEN]; 
+    char netmask[INET_ADDRSTRLEN];
 
     // Go through each policy and print them. Each line is a separate policy. 
     // If a optional policy field is not set it will not be printed.
@@ -238,36 +255,248 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
     }
 }
 
+// Helper function for parsing the protocol value from protocol_input parameter
+// If it is one of ALL, TCP, UDP, or ICMP protocol it'll set it on the policy
+// Otherwise it'll do nothing
+// Returns 1 if there was a valid protocol, or 0 if there was not.
+int parse_protocol(char *protocol_input, firewall_policy_t *policy)
+{
+    int set_protocol = 1;
+
+    // Check and set which protocol the policy should apply to
+    if (strcmp(protocol_input, PROTO_ALL) == 0)
+    {
+        policy->protocol = IPPROTO_ALL;
+    }
+    else if (strcmp(protocol_input, PROTO_TCP) == 0)
+    {
+        policy->protocol = IPPROTO_TCP; 
+    }
+    else if (strcmp(protocol_input, PROTO_UDP) == 0)
+    {
+        policy->protocol = IPPROTO_UDP;
+    }
+    else if (strcmp(protocol_input, PROTO_ICMP) == 0)
+    {   
+        policy->protocol = IPPROTO_ICMP;
+    }
+    else 
+    {
+        set_protocol = 0;
+    }
+
+    return set_protocol;
+}
+
+// Helper function for parsing the action value from action_input parameter
+// If it is one of UNBLOCK or BLOCK strings it'll set it on the policy
+// Otherwise it'll do nothing
+// Returns 1 if there was a valid action, or 0 if there was not.
+int parse_action(char *action_input, firewall_policy_t *policy)
+{
+    int set_action = 1;
+
+    // Check and set the action that should be used for the policy
+    if (strcmp(action_input, ACTION_BLOCK) == 0)
+    {
+        policy->action = BLOCK;
+    }
+    else if (strcmp(action_input, ACTION_UNBLOCK) == 0)
+    {
+        policy->action = UNBLOCK;
+    }
+    else 
+    {
+        set_action = 0;
+    }
+
+    return set_action;
+}
+
 // TODO document
 void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
 {
+    // TODO remove
     // policy is for in or outgoing packets
     printf ("out/ingoing packet applied to policy \n");
 
+    // Number of args has to be an even number as each criteria will have a value associated with it
+    // And there has to enough args to cover the expected values from protocol, action, and in/outgoing packet type
+    if (num_args % 2 != 0 || num_args < MIN_NUM_ARGS_ADD_COMMAND)
+    {
+        usage();
+        return;
+    }
+
     firewall_policy_t policy;
 
-    policy.action = BLOCK;
-
-    // protocols are defined as the following (which come from IP side)
-    // IPPROTO_ICMP 1
-    // IPPROTO_TCP 6
-    // IPPROTO_UDP 17
-    // and for ALL use IPPROTO_ALL
-
-    // testing purposes
-    policy.protocol = IPPROTO_ICMP;
-
-    policy.src_ip_addr = 0;
-    policy.src_netmask = 0;
-    policy.dest_ip_addr = 0;
-    policy.dest_netmask = 0;
-    policy.dest_port = 0;
-    policy.src_port = 0;
+    policy.protocol = VALUE_NOT_SET;
+    policy.src_ip_addr = VALUE_NOT_SET;
+    policy.src_netmask = VALUE_NOT_SET;
+    policy.dest_ip_addr = VALUE_NOT_SET;
+    policy.dest_netmask = VALUE_NOT_SET;
+    policy.dest_port = VALUE_NOT_SET;
+    policy.src_port = VALUE_NOT_SET;
+    policy.action = VALUE_NOT_SET;
     
-
     policy.packet_type = packet_type;
 
-    // todo will need IP address format to be converted to bits? see: add_route.c
+    // Tracking for if optional values were set or not, including that if a protocol was set as it's mandatory
+    int protocol_set = 0;
+    int src_ip_set = 0;
+    int src_netmask_set = 0;
+    int src_port_set = 0;
+    int dest_ip_set = 0;
+    int dest_netmask_set = 0;
+    int dest_port_set = 0;
+
+    // Position within args that indicate a criteria to be added to the policy
+    int criteria_pos = ARGS_EXPECTED_COMMAND_POS + 1;
+    
+    // Position within args that indicate the value of a criteria to be set for the policy
+    int value_pos = criteria_pos + 1;
+
+    // TODO comment, also maybe split the logic into small functions for each type? returns 1 on success, 0 on failure or something
+    while (criteria_pos < num_args && value_pos < num_args)
+    {
+        if (strcmp(args[criteria_pos], PROTO) == 0) 
+        {
+            // Protocol was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (protocol_set)
+            {
+                usage();
+                return;
+            }
+            
+            // Parses the protocol contained at value_pos, and updates that the protocol was set
+            // If it fails, then it'll print usage and skip adding the policy
+            if (parse_protocol(args[value_pos], &policy))
+            {
+                protocol_set = 1;
+            }
+            else 
+            {
+                usage();
+                return;
+            }
+        } 
+        else if (strcmp(args[criteria_pos], ACTION) == 0) 
+        {
+            // Action was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (policy.action != VALUE_NOT_SET)
+            {
+                usage();
+                return;
+            }   
+
+            // If parsing the action fails then print usage and skip adding the policy
+            if (!parse_action(args[value_pos], &policy))
+            {
+                usage();
+                return;
+            }
+        } 
+        else if (strcmp(args[criteria_pos], SRC_IP) == 0) 
+        {
+            // Source IP was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (src_ip_set)
+            {
+                usage();
+                return;
+            }  
+
+            // todo will need IP address format to be converted to bits. function call is inet_pton
+            // todo add logic
+        }
+        else if (strcmp(args[criteria_pos], SRC_NETMASK) == 0) 
+        {
+            // Source netmask was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (src_netmask_set)
+            {
+                usage();
+                return;
+            }  
+
+             // todo will need IP address format to be converted to bits. function call is inet_pton
+            // todo add logic
+        }
+        else if (strcmp(args[criteria_pos], SRC_PORT) == 0) 
+        {
+            // Source port was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (src_port_set)
+            {
+                usage();
+                return;
+            }  
+
+            // todo add logic
+        }
+        else if (strcmp(args[criteria_pos], DEST_IP) == 0) 
+        {
+            // Destination IP was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (dest_ip_set)
+            {
+                usage();
+                return;
+            }  
+
+             // todo will need IP address format to be converted to bits. function call is inet_pton
+            // todo add logic
+        }
+        else if (strcmp(args[criteria_pos], DEST_NETMASK) == 0) 
+        {
+            // Destination netmask was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (dest_netmask_set)
+            {
+                usage();
+                return;
+            }  
+
+             // todo will need IP address format to be converted to bits. function call is inet_pton
+            // todo add logic
+        }
+        else if (strcmp(args[criteria_pos], DEST_PORT) == 0) 
+        {
+            // Destination port was already set, therefore invalid input
+            // Print usage and don't add the policy
+            if (dest_port_set)
+            {
+                usage();
+                return;
+            }  
+
+            // todo add logic
+        }
+        else 
+        {
+            usage();
+            return;
+        }
+
+        // Increment by 2 since we parse 2 positions at a time, one for the criteria type and the other for the value
+        criteria_pos += 2;
+        value_pos += 2;
+    }
+
+    // TODO clean this logic up slightly, mainly for the port stuff
+    // If the protocol wasn't set, action wasn't set, or if a netmask was set without the corresponding ip address for src/dest
+    // then don't add the policy and print the usage expectations
+    if (!protocol_set ||
+        (src_netmask_set && !src_ip_set) ||
+        (dest_netmask_set && !dest_ip_set) ||
+        ((policy.protocol == IPPROTO_ALL || policy.protocol == IPPROTO_ICMP) && (src_port_set || dest_port_set)) ||
+        policy.action == VALUE_NOT_SET)
+    {
+        usage();
+        return;
+    }
 
     int result = ioctl(ip_fd, FIREWALLPOLICYADD, &policy);
 
@@ -275,7 +504,6 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     { 
         printf("failed ioctl call \n");
     }
-    // todo everything else
 }
 
 // Checks the passed in args for if there is a valid command to be executed
