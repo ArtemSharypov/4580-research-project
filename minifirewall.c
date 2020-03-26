@@ -79,6 +79,14 @@ void usage()
     printf("This should be used as \n");
 }
 
+// Helper function for calling usage(), and exiting the program in times where there is invalid
+// input and the program won't continue running. 
+void invalid_input()
+{
+    usage();
+    exit(1);
+}
+
 // Handles deleting a specified policy that is represented by a number within the args array.
 // It'll verify that there is a correct number of args passed in, and that the last argument
 // is a positive number representing the policy that should be deleted.
@@ -91,8 +99,7 @@ void handle_delete_command(int num_args, char *args[], int ip_fd)
     // If the value is different, then print the usage expectations for the program 
     if (num_args != NUM_ARGS_DELETE_COMMAND)
     {
-        usage();
-        return;
+        invalid_input();
     }
 
     // Parse the last argument passed in as a number
@@ -104,8 +111,7 @@ void handle_delete_command(int num_args, char *args[], int ip_fd)
     // Policy number to delete has to be a positive, non zero number
     if (policy_num_to_delete < 1)
     {
-        usage();
-        return;
+        invalid_input();
     }
 
     // Call to delete the firewall policy using the parsed value
@@ -127,8 +133,7 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
     // If the value is different, then print the usage expectations for the program 
     if (num_args != NUM_ARGS_PRINT_COMMAND)
     {
-        usage();
-        return;
+        invalid_input();
     }
 
     policies_t policies;
@@ -149,8 +154,6 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
 
     int i;
     firewall_policy_t curr_policy;
-    char ip_addr[INET_ADDRSTRLEN]; 
-    char netmask[INET_ADDRSTRLEN];
 
     // Go through each policy and print them. Each line is a separate policy. 
     // If a optional policy field is not set it will not be printed.
@@ -202,53 +205,37 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
         // Source IP address the policy applies to
         if (curr_policy.src_ip_addr != VALUE_NOT_SET)
         {
-            // Convert the source IP address from binary form to text form
-            if (inet_ntop(AF_INET, &(curr_policy.src_ip_addr), ip_addr, INET_ADDRSTRLEN) != NULL)
-            {
-                printf(" Src IP Addr %s | ", ip_addr);
-            }
+            printf("Src IP Addr %s | ", inet_ntoa(curr_policy.src_ip_addr));
         }
 
         // Source Netmask that would be applied to the source IP address
         if (curr_policy.src_netmask != VALUE_NOT_SET)
         {
-            // Convert the source netmask from binary form to text form
-            if (inet_ntop(AF_INET, &(curr_policy.src_netmask), netmask, INET_ADDRSTRLEN) != NULL)
-            {
-                printf(" Src Netmask %s | ", netmask);
-            }
+            printf("Src Netmask %s | ", inet_ntoa(curr_policy.src_netmask));
         }
 
         // Print source port if the value is set
         if (curr_policy.src_port != VALUE_NOT_SET)
         {
-            printf(" Src Port %d | ", curr_policy.src_port);
+            printf("Src Port %d | ", curr_policy.src_port);
         }
 
         // Destination IP address the policy applies to
         if (curr_policy.dest_ip_addr != VALUE_NOT_SET)
         {
-            // Convert the destination IP address from binary form to text form
-            if (inet_ntop(AF_INET, &(curr_policy.dest_ip_addr), ip_addr, INET_ADDRSTRLEN) != NULL)
-            {
-                printf(" Dest IP Addr %s | ", ip_addr);
-            }
+            printf("Dest IP Addr %s | ", inet_ntoa(curr_policy.dest_ip_addr));
         }
 
         // Destination Netmask that would be applied to the destination IP address
         if (curr_policy.dest_netmask != VALUE_NOT_SET)
         {
-            // Convert the destination netmask from binary form to text form
-            if (inet_ntop(AF_INET, &(curr_policy.dest_netmask), netmask, INET_ADDRSTRLEN) != NULL)
-            {
-                printf(" Dest Netmask %s | ", netmask);
-            }
+            printf("Dest Netmask %s | ", inet_ntoa(curr_policy.dest_netmask));
         }
 
         // Print destination port if the value is set
         if (curr_policy.dest_port != VALUE_NOT_SET)
         {
-            printf(" Dest Port %d | ", curr_policy.dest_port);
+            printf("Dest Port %d | ", curr_policy.dest_port);
         }
 
         printf("\n");
@@ -257,12 +244,9 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
 
 // Helper function for parsing the protocol value from protocol_input parameter
 // If it is one of ALL, TCP, UDP, or ICMP protocol it'll set it on the policy
-// Otherwise it'll do nothing
-// Returns 1 if there was a valid protocol, or 0 if there was not.
-int parse_protocol(char *protocol_input, firewall_policy_t *policy)
+// Otherwise it'll call invalid_input()
+void parse_protocol(char *protocol_input, firewall_policy_t *policy)
 {
-    int set_protocol = 1;
-
     // Check and set which protocol the policy should apply to
     if (strcmp(protocol_input, PROTO_ALL) == 0)
     {
@@ -282,20 +266,15 @@ int parse_protocol(char *protocol_input, firewall_policy_t *policy)
     }
     else 
     {
-        set_protocol = 0;
+        invalid_input();
     }
-
-    return set_protocol;
 }
 
 // Helper function for parsing the action value from action_input parameter
 // If it is one of UNBLOCK or BLOCK strings it'll set it on the policy
-// Otherwise it'll do nothing
-// Returns 1 if there was a valid action, or 0 if there was not.
-int parse_action(char *action_input, firewall_policy_t *policy)
+// Otherwise it'll call invalid_input()
+void parse_action(char *action_input, firewall_policy_t *policy)
 {
-    int set_action = 1;
-
     // Check and set the action that should be used for the policy
     if (strcmp(action_input, ACTION_BLOCK) == 0)
     {
@@ -307,29 +286,80 @@ int parse_action(char *action_input, firewall_policy_t *policy)
     }
     else 
     {
-        set_action = 0;
+       invalid_input();
     }
-
-    return set_action;
 }
 
-// TODO document
+// Helper function for parsing the source port value from src_port_input parameter
+// If it is a positive port number it'll set it on the policy
+// Otherwise it'll call invalid_input()
+void parse_source_port(char *src_port_input, firewall_policy_t *policy)
+{
+    int port = atoi(src_port_input);
+
+    // Port has to be a positive number to be considered valid
+    if (port <= 0)
+    {
+        invalid_input();
+    }
+
+    policy->src_port = port;
+}
+
+// Helper function for parsing the destination port value from dest_port_input parameter
+// If it is a positive port number it'll set it on the policy
+// Otherwise it'll call invalid_input()
+void parse_dest_port(char *dest_port_input, firewall_policy_t *policy)
+{
+    int port = atoi(dest_port_input);
+
+    // Port has to be a positive number to be considered valid
+    if (port <= 0)
+    {
+        invalid_input();
+    }
+
+    policy->dest_port = port;
+}
+
+// Helper function to check if there is an invalid netmask set. Which means if the netmask is set and the ip address
+// is not.
+// Returns 1 if invalid, 0 if valid setup 
+int invalid_netmask_set(int netmask_set, int ip_addr_set)
+{
+    return netmask_set && !ip_addr_set;
+}
+
+// Helper function to check if there is an invalid port setup. Which means that the source or destination is set
+// when the protocol is either ALL or ICMP.
+// Returns 1 if invalid, 0 if valid setup
+int invalid_port_setups(int protocol, int src_port_set, int dest_port_set)
+{
+    // If the protocol is ALL, or ICMP then the port for source or destination can't be set.
+    int deny_ports_set = protocol == IPPROTO_ALL || protocol == IPPROTO_ICMP;
+    int either_port_set = src_port_set || dest_port_set;
+
+    return deny_ports_set && either_port_set;
+}
+
+// Handles adding a policy to the firewall.
+// Goes through args and build a policy based on the provided values, if there is a missing value for a policy criteria
+// or if there is unexpected values then the policy will not be added.
+// Expects that there is at least a protocol, and an action. Everything else is optional, if there is a netmask
+// then there must be a corresponding IP address for source or destination.
+// Port numbers are not allowed if the protocol is ALL or ICMP.
 void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
 {
-    // TODO remove
-    // policy is for in or outgoing packets
-    printf ("out/ingoing packet applied to policy \n");
-
     // Number of args has to be an even number as each criteria will have a value associated with it
     // And there has to enough args to cover the expected values from protocol, action, and in/outgoing packet type
     if (num_args % 2 != 0 || num_args < MIN_NUM_ARGS_ADD_COMMAND)
     {
-        usage();
-        return;
+        invalid_input();
     }
 
     firewall_policy_t policy;
 
+    // Set values to defaults
     policy.protocol = VALUE_NOT_SET;
     policy.src_ip_addr = VALUE_NOT_SET;
     policy.src_netmask = VALUE_NOT_SET;
@@ -356,128 +386,120 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     // Position within args that indicate the value of a criteria to be set for the policy
     int value_pos = criteria_pos + 1;
 
-    // TODO comment, also maybe split the logic into small functions for each type? returns 1 on success, 0 on failure or something
+    // Goes through each arg and adds it to the policy.
+    // If there are duplicate criterias (such as protocol), non-positive port numbers, or invalid
+    // values for a criteria then it will print the usage and return out of this function.
+    // critieria_pos and value_pos are incremented by 2 every loop as a criteria and its value are checked 
+    // at the same time.
     while (criteria_pos < num_args && value_pos < num_args)
     {
         if (strcmp(args[criteria_pos], PROTO) == 0) 
         {
             // Protocol was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (protocol_set)
             {
-                usage();
-                return;
+                invalid_input();
             }
             
-            // Parses the protocol contained at value_pos, and updates that the protocol was set
-            // If it fails, then it'll print usage and skip adding the policy
-            if (parse_protocol(args[value_pos], &policy))
-            {
-                protocol_set = 1;
-            }
-            else 
-            {
-                usage();
-                return;
-            }
+            // Attempts to parse the protocol contained at value_pos
+            parse_protocol(args[value_pos], &policy);
+            protocol_set = 1;
         } 
         else if (strcmp(args[criteria_pos], ACTION) == 0) 
         {
             // Action was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (policy.action != VALUE_NOT_SET)
             {
-                usage();
-                return;
+                invalid_input();
             }   
 
-            // If parsing the action fails then print usage and skip adding the policy
-            if (!parse_action(args[value_pos], &policy))
-            {
-                usage();
-                return;
-            }
+            parse_action(args[value_pos], &policy);
         } 
         else if (strcmp(args[criteria_pos], SRC_IP) == 0) 
         {
             // Source IP was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (src_ip_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-            // todo will need IP address format to be converted to bits. function call is inet_pton
-            // todo add logic
+            if(!inet_aton(args[value_pos], &(policy.src_ip_addr)))
+            {
+                invalid_input();
+            } 
+
+            src_ip_set = 1;
         }
         else if (strcmp(args[criteria_pos], SRC_NETMASK) == 0) 
         {
             // Source netmask was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (src_netmask_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-             // todo will need IP address format to be converted to bits. function call is inet_pton
-            // todo add logic
+            if(!inet_aton(args[value_pos], &(policy.src_netmask)))
+            {
+                invalid_input();
+            } 
+
+            src_netmask_set = 1;
         }
         else if (strcmp(args[criteria_pos], SRC_PORT) == 0) 
         {
             // Source port was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (src_port_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-            // todo add logic
+            parse_source_port(args[value_pos], &policy);
+            src_port_set = 1;
         }
         else if (strcmp(args[criteria_pos], DEST_IP) == 0) 
         {
             // Destination IP was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (dest_ip_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-             // todo will need IP address format to be converted to bits. function call is inet_pton
-            // todo add logic
+            if(!inet_aton(args[value_pos], &(policy.dest_ip_addr)))
+            {
+                invalid_input();
+            } 
+
+            dest_ip_set = 1;
         }
         else if (strcmp(args[criteria_pos], DEST_NETMASK) == 0) 
         {
             // Destination netmask was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (dest_netmask_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-             // todo will need IP address format to be converted to bits. function call is inet_pton
-            // todo add logic
+            if(!inet_aton(args[value_pos], &(policy.dest_netmask)))
+            {
+                invalid_input();
+            } 
+
+            dest_netmask_set = 1;
         }
         else if (strcmp(args[criteria_pos], DEST_PORT) == 0) 
         {
             // Destination port was already set, therefore invalid input
-            // Print usage and don't add the policy
             if (dest_port_set)
             {
-                usage();
-                return;
+                invalid_input();
             }  
 
-            // todo add logic
+            parse_dest_port(args[value_pos], &policy);
+            dest_port_set = 1;
         }
         else 
         {
-            usage();
-            return;
+            invalid_input();
         }
 
         // Increment by 2 since we parse 2 positions at a time, one for the criteria type and the other for the value
@@ -485,22 +507,20 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
         value_pos += 2;
     }
 
-    // TODO clean this logic up slightly, mainly for the port stuff
-    // If the protocol wasn't set, action wasn't set, or if a netmask was set without the corresponding ip address for src/dest
-    // then don't add the policy and print the usage expectations
+    // If the protocol wasn't set, action wasn't set, if there an invalid netmask, or an invalid port set
+    // then there was invalid input
     if (!protocol_set ||
-        (src_netmask_set && !src_ip_set) ||
-        (dest_netmask_set && !dest_ip_set) ||
-        ((policy.protocol == IPPROTO_ALL || policy.protocol == IPPROTO_ICMP) && (src_port_set || dest_port_set)) ||
+        invalid_netmask_set(src_netmask_set, src_ip_set) ||
+        invalid_netmask_set(dest_netmask_set, dest_ip_set) ||
+        invalid_port_setups(policy.protocol, src_port_set, dest_port_set) ||
         policy.action == VALUE_NOT_SET)
     {
-        usage();
-        return;
+        invalid_input();
     }
 
     int result = ioctl(ip_fd, FIREWALLPOLICYADD, &policy);
 
-    if (result == -1 )
+    if (result == -1)
     { 
         printf("failed ioctl call \n");
     }
@@ -515,7 +535,7 @@ void check_args_for_command(int num_args, char *args[])
 
     // Check the command that was passed in the args
     // If there was a command, call the appropriate function to handle it, otherwise
-    // print the expected usage for this program
+    // print the expected usage for this program 
     if (strcmp(args[ARGS_EXPECTED_COMMAND_POS], ADD_IN_POLICY) == 0) 
     {
         handle_add_command(num_args, args, INGOING_PACKET, ip_fd);
@@ -534,7 +554,7 @@ void check_args_for_command(int num_args, char *args[])
     } 
     else 
     {
-        usage();
+        invalid_input();
     }
 }
 
@@ -542,8 +562,7 @@ int main(int argc, char *argv[])
 {
     if (argc < MIN_NUMBER_ARGS) 
     {
-        usage();   
-        exit(1);
+        invalid_input();
     }
 
     check_args_for_command(argc, argv);
