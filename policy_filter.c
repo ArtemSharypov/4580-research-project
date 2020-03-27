@@ -171,7 +171,8 @@ int has_diff_protocol(int policy_protocol, int packet_protocol)
 // Returns 0 if they're equal or if the policy_port value is equal to VALUE_NOT_SET, and 1 if they're different
 int has_diff_port(u16_t policy_port, u16_t packet_port)
 {
-    return policy_port != VALUE_NOT_SET && policy_port != packet_port;
+    // Converts packet_port to host byte order before the comparison
+    return policy_port != VALUE_NOT_SET && policy_port != ntohs(packet_port);
 }
 
 // Used to check if the policy and the packet have a different IP address.
@@ -222,11 +223,19 @@ int should_block_packet(int packet_type, u8_t protocol, u16_t src_port, u16_t de
         // if ((protocol == IPPROTO_TCP || protocol == IPPROTO_UDP) && packet_type == policy.packet_type)
         // {
         //     policy.protocol = protocol;
-        //     policy.src_ip_addr = src_ip_addr;
-        //     policy.dest_ip_addr = dest_ip_addr;
-        //     policy.dest_port = dest_port;
-        //     policy.src_port = src_port;
+        //     // policy.src_ip_addr = src_ip_addr;
+        //     // policy.dest_ip_addr = dest_ip_addr;
 
+        //     // TODO uncomment this later for testing, verifying that the two ports are the same currently
+        //     //policy.dest_port = ntohs(dest_port);
+
+        //     if (policy.src_port != VALUE_NOT_SET && policy.src_port != ntohs(src_port))
+        //     {
+        //         policy.src_port = ntohs(src_port);
+        //     }
+        //     else {
+        //         policy.src_port = 2;
+        //     }
         //     curr_node->policy = policy;
         // }
         

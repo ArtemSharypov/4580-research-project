@@ -217,7 +217,7 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
         // Print source port if the value is set
         if (curr_policy.src_port != VALUE_NOT_SET)
         {
-            printf("Src Port %d | ", ntohs(curr_policy.src_port));
+            printf("Src Port %d | ", curr_policy.src_port);
         }
 
         // Destination IP address the policy applies to
@@ -235,7 +235,7 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
         // Print destination port if the value is set
         if (curr_policy.dest_port != VALUE_NOT_SET)
         {
-            printf("Dest Port %d | ", ntohs(curr_policy.dest_port));
+            printf("Dest Port %d | ", curr_policy.dest_port);
         }
 
         printf("\n");
@@ -297,9 +297,6 @@ void parse_source_port(char *src_port_input, firewall_policy_t *policy)
 {
     u16_t port = atoi(src_port_input);
 
-    // Convert the port to be stored as network byte order
-    port = htons(port);
-
     // Port has to be a positive number to be considered valid
     if (port <= 0)
     {
@@ -315,9 +312,6 @@ void parse_source_port(char *src_port_input, firewall_policy_t *policy)
 void parse_dest_port(char *dest_port_input, firewall_policy_t *policy)
 {
     int port = atoi(dest_port_input);
-
-    // Convert the port to be stored as network byte order
-    port = htons(port);
 
     // Port has to be a positive number to be considered valid
     if (port <= 0)
