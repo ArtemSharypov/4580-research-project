@@ -231,10 +231,10 @@ int should_block_packet(int packet_type, u8_t protocol, u16_t src_port, u16_t de
 
         //     if (policy.src_port != VALUE_NOT_SET && policy.src_port != ntohs(src_port))
         //     {
-        //         policy.src_port = ntohs(src_port);
+        //         // policy.src_port = ntohs(src_port); 
         //     }
         //     else {
-        //         policy.src_port = 2;
+        //         policy.src_port = ntohs(src_port);
         //     }
         //     curr_node->policy = policy;
         // }

@@ -872,14 +872,32 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		return;
 	}
 
-	// TODO remove these once others are set
-	// int tempSrcPort = ip_port->ip_dl.dl_ps.ps_port;//ip_port->ip_dl.dl_eth.de_port;//100;
-	// int tempDestPort =ip_port - ip_port_table;; //ip_port->ip_port;//ip_dl.dl_ps.ps_port;//100;
-	u16_t tempSrcPort = 0;
-	u16_t tempDestPort = 0;
+	// Ports for the packet if the protocol is either TCP or UDP, defaults to 0 for the case of ICMP
+	u16_t src_port = 0;
+	u16_t dest_port = 0; 
 	u8_t proto = ip_hdr->ih_proto;
 
-	if (proto == IPPROTO_TCP)
+	// Get the source and destination port if the protocol is either UDP or TCP
+	if (proto == IPPROTO_UDP)
+	{
+		// TODO need to test this
+
+		// Read IP Header first to get the size of it
+		acc_t *ip_hdr_acc= bf_cut(pack, 0, IP_MIN_HDR_SIZE);
+		ip_hdr_acc= bf_packIffLess(ip_hdr_acc, IP_MIN_HDR_SIZE);
+		ip_hdr_t *ip_hdr= (ip_hdr_t *)ptr2acc_data(ip_hdr_acc);
+		size_t  ip_hdr_size= (ip_hdr->ih_vers_ihl & IH_IHL_MASK) << 2;
+
+		// Read in the UDP header after the IP header
+		acc_t *udp_acc= bf_cut(pack, ip_hdr_size, UDP_HDR_SIZE); 
+		udp_acc= bf_packIffLess(udp_acc, UDP_HDR_SIZE);
+		udp_hdr_t *udp_hdr= (udp_hdr_t *)ptr2acc_data(udp_acc);
+
+		// Set the ports from the UDP Header
+		src_port = udp_hdr->uh_src_port;
+		dest_port = udp_hdr->uh_dst_port;
+	}
+	else if (proto == IPPROTO_TCP)
 	{
 		acc_t *dup_data = bf_dupacc(pack);
 
@@ -890,8 +908,8 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		if (ip_datalen == 0)
 		{
 			bf_afree(dup_data);
-			return; // TODO figure out what to do with these cause it means itd fail anyway
-		
+			bf_afree(pack);
+			return;
 		}
 	
 		dup_data->acc_linkC++;
@@ -900,16 +918,14 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		ip_hdr= (ip_hdr_t *)ptr2acc_data(ip_pack);
 		dup_data= bf_delhead(dup_data, ip_hdr_len);
 
-		// /* Compute the checksum */
-		// sum= tcp_pack_oneCsum(ip_hdr, dup_data);
-
 		/* Extract the TCP header */
 		if (ip_datalen < TCP_MIN_HDR_SIZE)
 		{
 			DBLOCK(1, printf("truncated TCP header\n"));
 			bf_afree(ip_pack);
 			bf_afree(dup_data);
-			return;  // TODO figure out what to do with these cause it means itd fail anyway
+			bf_afree(pack);
+			return; 
 		}
 		dup_data= bf_packIffLess(dup_data, TCP_MIN_HDR_SIZE);
 		tcp_hdr_t *tcp_hdr= (tcp_hdr_t *)ptr2acc_data(dup_data);
@@ -919,7 +935,8 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		{
 			bf_afree(ip_pack);
 			bf_afree(dup_data);
-			return; // TODO figure out what to do with these cause it means itd fail anyway
+			bf_afree(pack);
+			return; 
 		}
 
 		dup_data->acc_linkC++;
@@ -927,18 +944,17 @@ assert (pack->acc_length >= IP_MIN_HDR_SIZE);
 		tcp_pack= bf_align(tcp_pack, tcp_hdr_len, 4);
 		tcp_hdr= (tcp_hdr_t *)ptr2acc_data(tcp_pack);
 
-		tempSrcPort = tcp_hdr->th_srcport;
-		tempDestPort = tcp_hdr->th_dstport;
+		src_port = tcp_hdr->th_srcport;
+		dest_port = tcp_hdr->th_dstport;
 
 		bf_afree(ip_pack);
 		bf_afree(dup_data);
 		bf_afree(tcp_pack);
 	}
 
-	// TODO add the correct parameters to this
 	// Check if we should block the specific ingoing packet or not based on the current firewall policies
 	// If so, then exit this function
-	if (should_block_ingoing_packet(proto, tempSrcPort, tempDestPort, ip_hdr->ih_src, ip_hdr->ih_dst))
+	if (should_block_ingoing_packet(proto, src_port, dest_port, ip_hdr->ih_src, ip_hdr->ih_dst))
 	{
 		bf_afree(pack);
 		return;
