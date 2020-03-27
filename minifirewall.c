@@ -72,11 +72,35 @@ int get_ip_fd()
     return ip_fd;
 }
 
-// TODO add comments
+// Prints the usage expectation for this program. 
+// It includes the commands that can be used and the arguments that each command requires, including optional
+// values for adding a new policy. 
 void usage()
 {
-    // TODO
-    printf("This should be used as \n");
+    printf("This program/command can be used in the following ways\n");
+    printf("\n");
+    printf("Add a policy to the firewall: \n");
+    printf("Usage: minifirewall --in --action action --proto protocol [--srcip srcip] [--srcnetmask srcnetmask]\n");
+    printf("[--srcport srcport] [--destip destip] [--destnetmask destnetmask] [--destport destport] \n");
+    printf("\n");
+    printf("Usage: minifirewall --out --action action --proto protocol [--srcip srcip] [--srcnetmask srcnetmask] \n");
+    printf("[--srcport srcport] [--destip destip] [--destnetmask destnetmask] [--destport destport] \n");
+    printf("\n");
+    printf("\t Anything in [] is an optional criteria for the policy.\n");
+    printf("\t action, proto, in/out, and any set optional criterias must match a packets for the policy to apply.\n");
+    printf("\t --out applies to outgoing packets, --in applies to incoming packets.\n");
+    printf("\t action must be one of BLOCK, or UNBLOCK to block/unblock a packet based on the policy criteria.\n");
+    printf("\t protocol must be one of TCP, UDP, ICMP, or ALL for which protocol the policy applies to.\n");
+    printf("\t srcip, srcnetmask, destip, destnetmask must be in IPV4 decimal & dot format.\n");
+    printf("\t srcport, and destport must be a positive value, and protocol must be UDP or TCP.\n");
+    printf("\n");
+    printf("Delete a policy from the firewall: \n");
+    printf("Usage: minifirewall --delete policynum\n");
+    printf("\n");
+    printf("\t policynum must be a positive value, indicating which policy should be deleted. \n");
+    printf("\n");
+    printf("Print all policies in the firewall: \n");
+    printf("Usage: minifirewall --print \n");
 }
 
 // Helper function for calling usage(), and exiting the program in times where there is invalid
