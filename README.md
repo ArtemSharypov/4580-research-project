@@ -32,17 +32,27 @@ We had a lot of completing this lab and I hope you enjoy the content we've provi
 
 # Using the firewall
 
-  We access the firewall directly by invoking the 'minifirewall' command
+  We access the firewall directly by invoking the 'minifirewall' command. Below are examples of some simple commands to get you started. Please view the project report or simply invoke the 'minifirewall' command without parameters for a more detailed explanation on command usage.
   
    1. To print all of your currently configured rules:
    
           minifirewall --print
           
-   2. To Block incoming packets 
-    
-   3. To block outgoing packets
-   4. To block outgoing packets to a specific IP
-   5. To configure a policy
+   2. To Block all incoming packets
+   
+          minifirewall --in --proto -ALL --action BLOCK
+          
+   3. To block all outgoing packets
+   
+          minifirewall --in --proto -ALL --action BLOCK
+          
+   4. To block incoming packets from a specific IP (Ex: 127.0.0.2)
+   
+          minifirewall --in --srcip 127.0.0.2 --proto TCP --destport 80 --action BLOCK
+          
+   5. To delete a policy (Ex: policy #1)
+   
+          minifirewall --delete 1
    
 # Testing the Firewall
 
