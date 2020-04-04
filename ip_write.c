@@ -225,8 +225,6 @@ size_t data_len;
 	// Get the source and destination port if the protocol is either UDP or TCP
 	if (proto == IPPROTO_UDP)
 	{
-		// TODO need to test this
-
 		// Read IP Header first to get the size of it
 		acc_t *ip_hdr_acc= bf_cut(data, 0, IP_MIN_HDR_SIZE);
 		ip_hdr_acc= bf_packIffLess(ip_hdr_acc, IP_MIN_HDR_SIZE);

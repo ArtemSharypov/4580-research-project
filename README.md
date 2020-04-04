@@ -24,7 +24,6 @@ We had a lot of completing this lab and I hope you enjoy the content we've provi
       - firewall_def.h to /usr/src/minix/include/net/gen and add it to the Makefile in same folder
       - minifirewall.c & makefile to /usr/src/minix/commands/minifirewall (create the directory if it doesn't exist) 
       - modify makefile in /usr/src/minix/commands to include minifirewall
-      - inet.c to /usr/src/minix/net/inet/ (not needed yet)
  9. Run Make build (Builds the changes you just made)
  10. Run Make install (This updates the kernal commands to include the minifirewall)
  

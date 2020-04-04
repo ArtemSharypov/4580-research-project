@@ -218,26 +218,6 @@ int should_block_packet(int packet_type, u8_t protocol, u16_t src_port, u16_t de
     for (curr_node = policies_head; curr_node != NULL; curr_node = curr_node->next_node)
     {
         policy = curr_node->policy;
-
-        // TODO for testing til logging is in
-        // if ((protocol == IPPROTO_TCP || protocol == IPPROTO_UDP) && packet_type == policy.packet_type)
-        // {
-        //     policy.protocol = protocol;
-        //     // policy.src_ip_addr = src_ip_addr;
-        //     // policy.dest_ip_addr = dest_ip_addr;
-
-        //     // TODO uncomment this later for testing, verifying that the two ports are the same currently
-        //     //policy.dest_port = ntohs(dest_port);
-
-        //     if (policy.src_port != VALUE_NOT_SET && policy.src_port != ntohs(src_port))
-        //     {
-        //         // policy.src_port = ntohs(src_port); 
-        //     }
-        //     else {
-        //         policy.src_port = ntohs(src_port);
-        //     }
-        //     curr_node->policy = policy;
-        // }
         
         // If the packet has any differing values compared to the policy, then the policy would not apply
         // therefore we can move onto the next policy

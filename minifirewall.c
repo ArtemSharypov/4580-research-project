@@ -34,7 +34,6 @@
 #define DELETE_POLICY "--delete" // Delete a policy
 #define PRINT_POLICIES "--print" // Print the policies
 #define TEST_POLICIES  "--test" // Test all policies
-// TODO: For future add a debug command, we tried adding one but had too many bugs ironically enough 
 
 // Position of where the command must be within arguments, for adding / deleting / printing policies
 #define ARGS_EXPECTED_COMMAND_POS 1
@@ -554,8 +553,9 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     
     policy.packet_type = packet_type;
 
-    // Tracking for if optional values were set or not, including that if a protocol was set as it's mandatory
+    // Tracking for if a criteria for a policy was set or not
     int protocol_set = 0;
+    int action_set = 0;
     int src_ip_set = 0;
     int src_netmask_set = 0;
     int src_port_set = 0;
@@ -599,6 +599,7 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
             }   
 
             parse_action(args[value_pos], &policy);
+            action_set = 1;
         } 
         else if (strcmp(args[criteria_pos], SRC_IP) == 0) 
         {
@@ -695,10 +696,10 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     // If the protocol wasn't set, action wasn't set, if there an invalid netmask, or an invalid port set
     // then there was invalid input
     if (!protocol_set ||
+        !action_set ||
         invalid_netmask_set(src_netmask_set, src_ip_set) ||
         invalid_netmask_set(dest_netmask_set, dest_ip_set) ||
-        invalid_port_setups(policy.protocol, src_port_set, dest_port_set) ||
-        policy.action == VALUE_NOT_SET)
+        invalid_port_setups(policy.protocol, src_port_set, dest_port_set))
     {
         invalid_input();
     }
