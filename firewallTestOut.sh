@@ -108,7 +108,7 @@ printf "\nminifirewall --out --srcip 127.0.0.1 --proto TCP --action BLOCK\n" &>>
 minifirewall --out --srcip 127.0.0.1 --proto TCP --action BLOCK &>> $TEST_PATH
 (sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
-printf "\nminifirewall --out --srcip 127.0.0.1 --proto TCP --action BLOCK\n" &>> $TEST_PATH
+printf "\nminifirewall --out --srcip 127.0.0.1 --proto TCP --action UNBLOCK\n" &>> $TEST_PATH
 minifirewall --out --srcip 127.0.0.1 --proto TCP --destport 80 --action UNBLOCK &>> $TEST_PATH
 (sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
