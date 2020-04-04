@@ -1,3 +1,12 @@
+/*
+ minifirewall.c 
+ COMP 4580 WInter 2020
+ University Of Manitoba
+ Property of Artem Sharypov & Adam Salsi
+ April 6th, 2020
+*/
+
+// Basic c libraries
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -7,7 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
+// Inet libraries
 #include <netinet/in.h>
 #include <net/gen/firewall_def.h>
 #include <net/hton.h>
@@ -22,9 +33,11 @@
 #define ADD_OUT_POLICY "--out" // Add policy to outgoing packets
 #define DELETE_POLICY "--delete" // Delete a policy
 #define PRINT_POLICIES "--print" // Print the policies
+#define TEST_POLICIES  "--test" // Test all policies
+// TODO: For future add a debug command, we tried adding one but had too many bugs ironically enough 
 
 // Position of where the command must be within arguments, for adding / deleting / printing policies
-#define ARGS_EXPECTED_COMMAND_POS 1 
+#define ARGS_EXPECTED_COMMAND_POS 1
 
 #define MIN_NUMBER_ARGS 2 // Minimum number of expected arguments for any command 
 #define NUM_ARGS_DELETE_COMMAND 3 // Number of expected arguments for a delete a policy 
@@ -49,6 +62,13 @@
 #define ACTION_BLOCK "BLOCK" // Block packet action
 #define ACTION_UNBLOCK "UNBLOCK" // Unblock packet action
 
+// Paths of test content
+#define TEST_PATH_INPUT "../usr/src/minix/commands/minifirewall/testResults/testOutputIn.txt"
+#define TEST_PATH_OUTPUT "../usr/src/minix/commands/minifirewall/testResults/testOutputOut.txt"
+
+// Logging file Ptr
+FILE *logPtr = NULL;
+
 // Helper function for getting the ip file descriptor.
 // Returns the file descriptor as an int.
 int get_ip_fd()
@@ -70,13 +90,21 @@ int get_ip_fd()
 	}
 
     return ip_fd;
-}
+} // End get_ip_fd
 
-// Prints the usage expectation for this program. 
-// It includes the commands that can be used and the arguments that each command requires, including optional
-// values for adding a new policy. 
+/*
+ Prints the usage expectation for this program. 
+ It includes the commands that can be used and the arguments that each command requires, including optional
+ values for adding a new policy. 
+ Future Consideration: Could abstract into a help command --help, and leave only the first important lines in usage
+*/
 void usage()
 {
+    if (logPtr != NULL)
+    {
+      fprintf(logPtr, "\nUsage method called\n"); 
+    }
+    
     printf("This program/command can be used in the following ways\n");
     printf("\n");
     printf("Add a policy to the firewall: \n");
@@ -101,22 +129,66 @@ void usage()
     printf("\n");
     printf("Print all policies in the firewall: \n");
     printf("Usage: minifirewall --print \n");
-}
+    printf("\n");
+    printf("Test the functionality of the firewall: \n");
+    printf("Usage: minifirewall --test");
+    printf("\n");
+} // End usage
 
 // Helper function for calling usage(), and exiting the program in times where there is invalid
 // input and the program won't continue running. 
 void invalid_input()
 {
+    if (logPtr != NULL)
+    {
+      fprintf(logPtr, "\nUser entered invalid command, sending usage list...\n"); 
+    }
     usage();
     exit(1);
-}
+} // End invalid_input
 
-// Handles deleting a specified policy that is represented by a number within the args array.
-// It'll verify that there is a correct number of args passed in, and that the last argument
-// is a positive number representing the policy that should be deleted.
-// If the number is valid, then it'll do an ioctl call to delete the policy.
-// Otherwise if there is to many or to few arguments, or a negative / zero policy number it'll print
-// the usage expectations for the program to the console.
+// This function is responsible for calling the test script of our firewall
+void handle_test_command(int num_args, char *args[], int ip_fd)
+{
+   if (logPtr != NULL)
+   {
+      fprintf(logPtr, "\nInvoking test suite\n"); 
+   }
+    
+   // Run the test suite
+   system(" bash ./firewallTestIn.sh");
+   system(" bash ./firewallTestOut.sh");
+} // End handle_test_command
+
+/* 
+ Enable command logging
+ This function can be abstracted into a --debug command fairly easily, we opted to leave it as mandatory for    testing and design purposes 
+*/
+void initLogging()
+{
+  logPtr = fopen("testResults/firewallLogs.txt", "a+");
+  if(logPtr == NULL) 
+  {
+   printf("\nCould not open or find the log file for minifirewall. \n"); 
+   exit(1); 
+  }
+  else
+  {
+   struct tm tm = *localtime(&(time_t){time(NULL)}); 
+   fprintf(logPtr, "-------------------------------------------\n");
+   fprintf(logPtr, "Timestamp: %s", asctime(&tm));
+   fprintf(logPtr, "Logging Function calls for minifirewall..."); 
+  }
+} // End initLogging
+
+/* 
+ Handles deleting a specified policy that is represented by a number within the args array.
+ It'll verify that there is a correct number of args passed in, and that the last argument
+ is a positive number representing the policy that should be deleted.
+ If the number is valid, then it'll do an ioctl call to delete the policy.
+ Otherwise if there is to many or to few arguments, or a negative / zero policy number it'll print
+ the usage expectations for the program to the console.
+ */
 void handle_delete_command(int num_args, char *args[], int ip_fd)
 {
     // Number of arguments has to be equal to the number expected for a delete policy input
@@ -125,12 +197,20 @@ void handle_delete_command(int num_args, char *args[], int ip_fd)
     {
         invalid_input();
     }
+    
+    if (logPtr != NULL)
+    {
+      fprintf(logPtr, "\nInvoking Deletion Function\n"); 
+    }
 
     // Parse the last argument passed in as a number
     int policy_num_to_delete = atoi(args[NUM_ARGS_DELETE_COMMAND - 1]);
 
-    // TODO delete once tested
-    printf("For test purposes: Deleting policy number %d \n", policy_num_to_delete);
+    printf("Deleting policy number %d \n", policy_num_to_delete);
+    if (logPtr != NULL) 
+    {
+      fprintf(logPtr, "\nDeleting policy number %d \n", policy_num_to_delete);
+    }
 
     // Policy number to delete has to be a positive, non zero number
     if (policy_num_to_delete < 1)
@@ -144,13 +224,19 @@ void handle_delete_command(int num_args, char *args[], int ip_fd)
     if (result == -1 ) 
     { 
         printf("failed ioctl call \n");
+        if (logPtr != NULL) 
+        {
+          fprintf(logPtr, "\nfailed ioctl call \n");
+        }
     }
-}
+} // End handle_delete_command
 
-// Handles printing the current policies from the firewall.
-// It'll do an ioctl call to grab the firewall policies, and then print out the details of each policy.
-// It'll print any values set for each policy, if an optional field for a policy is not set then
-// the value will NOT be printed.
+/* 
+ Handles printing the current policies from the firewall.
+ It'll do an ioctl call to grab the firewall policies, and then print out the details of each policy.
+ It'll print any values set for each policy, if an optional field for a policy is not set then
+ the value will NOT be printed.
+*/
 void handle_print_command(int num_args, char *args[], int ip_fd)
 {
     // Number of arguments has to be equal to the number expected for the print command
@@ -158,6 +244,15 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
     if (num_args != NUM_ARGS_PRINT_COMMAND)
     {
         invalid_input();
+    }
+    
+    if (logPtr != NULL)
+    {
+      fprintf(logPtr, "\nPrinting Policies\n"); 
+      if (logPtr != NULL) 
+      {
+        fprintf(logPtr, "\nPrinting Policies\n");
+      }
     }
 
     policies_t policies;
@@ -168,12 +263,20 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
     if (result == -1 )
     { 
         printf("failed ioctl call \n");
+        if (logPtr != NULL) 
+        {
+          fprintf(logPtr, "\nfailed ioctl call \n");
+        }
         return;
     }
 
     if (policies.num_policies == 0)
     {
         printf("Firewall currently has no policies configured \n");
+        if (logPtr != NULL) 
+        {
+          fprintf(logPtr, "\nFirewall currently has no policies configured \n");
+        }
     }
 
     int i;
@@ -187,6 +290,10 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
 
         // Current Policy number
         printf("Policy #%d | ", (i+1));
+        if (logPtr != NULL) 
+        {
+          fprintf(logPtr, "\nPolicy #%d \n", (i+1));
+        }
 
         // Packets that this policy applies to, either ingoing or outgoing
         if (curr_policy.packet_type == INGOING_PACKET)
@@ -264,59 +371,89 @@ void handle_print_command(int num_args, char *args[], int ip_fd)
 
         printf("\n");
     }
-}
+} // End handle_print_command
 
-// Helper function for parsing the protocol value from protocol_input parameter
-// If it is one of ALL, TCP, UDP, or ICMP protocol it'll set it on the policy
-// Otherwise it'll call invalid_input()
+/* 
+ Helper function for parsing the protocol value from protocol_input parameter
+ If it is one of ALL, TCP, UDP, or ICMP protocol it'll set it on the policy
+ Otherwise it'll call invalid_input()
+*/
 void parse_protocol(char *protocol_input, firewall_policy_t *policy)
 {
     // Check and set which protocol the policy should apply to
     if (strcmp(protocol_input, PROTO_ALL) == 0)
     {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, TCP, UDP, and ICMP protocols called\n"); 
+        }
         policy->protocol = IPPROTO_ALL;
     }
     else if (strcmp(protocol_input, PROTO_TCP) == 0)
     {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, TCP called\n"); 
+        }
         policy->protocol = IPPROTO_TCP; 
     }
     else if (strcmp(protocol_input, PROTO_UDP) == 0)
     {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, UDP called\n"); 
+        }
         policy->protocol = IPPROTO_UDP;
     }
     else if (strcmp(protocol_input, PROTO_ICMP) == 0)
     {   
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, ICMP called\n"); 
+        }
         policy->protocol = IPPROTO_ICMP;
     }
     else 
     {
         invalid_input();
     }
-}
+} // End parse_protocol
 
-// Helper function for parsing the action value from action_input parameter
-// If it is one of UNBLOCK or BLOCK strings it'll set it on the policy
-// Otherwise it'll call invalid_input()
+/* 
+ Helper function for parsing the action value from action_input parameter
+ If it is one of UNBLOCK or BLOCK strings it'll set it on the policy
+ Otherwise it'll call invalid_input()
+*/
 void parse_action(char *action_input, firewall_policy_t *policy)
 {
     // Check and set the action that should be used for the policy
     if (strcmp(action_input, ACTION_BLOCK) == 0)
     {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, BLOCK action invocation\n"); 
+        }
         policy->action = BLOCK;
     }
     else if (strcmp(action_input, ACTION_UNBLOCK) == 0)
     {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nParsing, UNBLOCK action invocation\n"); 
+        }
         policy->action = UNBLOCK;
     }
     else 
     {
        invalid_input();
     }
-}
+} // End parse_action
 
-// Helper function for parsing the source port value from src_port_input parameter
-// If it is a positive port number it'll set it on the policy
-// Otherwise it'll call invalid_input()
+/* 
+ Helper function for parsing the source port value from src_port_input parameter
+ If it is a positive port number it'll set it on the policy
+ Otherwise it'll call invalid_input()
+*/
 void parse_source_port(char *src_port_input, firewall_policy_t *policy)
 {
     u16_t port = atoi(src_port_input);
@@ -327,12 +464,18 @@ void parse_source_port(char *src_port_input, firewall_policy_t *policy)
         invalid_input();
     }
 
+    if (logPtr != NULL)
+    {
+       fprintf(logPtr, "\nParsing source, %d port\n", port); 
+    }
     policy->src_port = port;
-}
+} // End parse_source_port
 
-// Helper function for parsing the destination port value from dest_port_input parameter
-// If it is a positive port number it'll set it on the policy
-// Otherwise it'll call invalid_input()
+/* 
+ Helper function for parsing the destination port value from dest_port_input parameter
+ If it is a positive port number it'll set it on the policy
+ Otherwise it'll call invalid_input()
+*/
 void parse_dest_port(char *dest_port_input, firewall_policy_t *policy)
 {
     int port = atoi(dest_port_input);
@@ -343,20 +486,28 @@ void parse_dest_port(char *dest_port_input, firewall_policy_t *policy)
         invalid_input();
     }
 
+    if (logPtr != NULL)
+    {
+       fprintf(logPtr, "\nParsing destination %d port\n", port); 
+    }
     policy->dest_port = port;
-}
+} // End parse_dest_port
 
-// Helper function to check if there is an invalid netmask set. Which means if the netmask is set and the ip address
-// is not.
-// Returns 1 if invalid, 0 if valid setup 
+/* 
+ Helper function to check if there is an invalid netmask set. Which means if the netmask is set and the ip address
+ is not.
+ Returns 1 if invalid, 0 if valid setup 
+*/
 int invalid_netmask_set(int netmask_set, int ip_addr_set)
 {
     return netmask_set && !ip_addr_set;
-}
+} // End invalid_netmask_set
 
-// Helper function to check if there is an invalid port setup. Which means that the source or destination is set
-// when the protocol is either ALL or ICMP.
-// Returns 1 if invalid, 0 if valid setup
+/* 
+ Helper function to check if there is an invalid port setup. Which means that the source or destination is set
+ when the protocol is either ALL or ICMP.
+ Returns 1 if invalid, 0 if valid setup
+*/
 int invalid_port_setups(int protocol, int src_port_set, int dest_port_set)
 {
     // If the protocol is ALL, or ICMP then the port for source or destination can't be set.
@@ -364,14 +515,17 @@ int invalid_port_setups(int protocol, int src_port_set, int dest_port_set)
     int either_port_set = src_port_set || dest_port_set;
 
     return deny_ports_set && either_port_set;
-}
+} // End invalid_port_setups
 
-// Handles adding a policy to the firewall.
-// Goes through args and build a policy based on the provided values, if there is a missing value for a policy criteria
-// or if there is unexpected values then the policy will not be added.
-// Expects that there is at least a protocol, and an action. Everything else is optional, if there is a netmask
-// then there must be a corresponding IP address for source or destination.
-// Port numbers are not allowed if the protocol is ALL or ICMP.
+/* 
+ Handles adding a policy to the firewall.
+ Goes through args and build a policy based on the provided values, 
+ if there is a missing value for a policy criteria
+ or if there is unexpected values then the policy will not be added.
+ Expects that there is at least a protocol, and an action. Everything else is optional, if there is a netmask
+ then there must be a corresponding IP address for source or destination.
+ Port numbers are not allowed if the protocol is ALL or ICMP.
+*/
 void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
 {
     // Number of args has to be an even number as each criteria will have a value associated with it
@@ -379,6 +533,11 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     if (num_args % 2 != 0 || num_args < MIN_NUM_ARGS_ADD_COMMAND)
     {
         invalid_input();
+    }
+    
+    if (logPtr != NULL)
+    {
+       fprintf(logPtr, "\nAdd command invoked\n"); 
     }
 
     firewall_policy_t policy;
@@ -410,11 +569,13 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     // Position within args that indicate the value of a criteria to be set for the policy
     int value_pos = criteria_pos + 1;
 
-    // Goes through each arg and adds it to the policy.
-    // If there are duplicate criterias (such as protocol), non-positive port numbers, or invalid
-    // values for a criteria then it will print the usage and return out of this function.
-    // critieria_pos and value_pos are incremented by 2 every loop as a criteria and its value are checked 
-    // at the same time.
+    /* 
+     Goes through each arg and adds it to the policy.
+     If there are duplicate criterias (such as protocol), non-positive port numbers, or invalid
+     values for a criteria then it will print the usage and return out of this function.
+     critieria_pos and value_pos are incremented by 2 every loop as a criteria and its value are checked 
+     at the same time.
+    */
     while (criteria_pos < num_args && value_pos < num_args)
     {
         if (strcmp(args[criteria_pos], PROTO) == 0) 
@@ -547,19 +708,42 @@ void handle_add_command(int num_args, char *args[], int packet_type, int ip_fd)
     if (result == -1)
     { 
         printf("failed ioctl call \n");
+        if (logPtr != NULL) 
+        {
+          fprintf(logPtr, "\nfailed ioctl call \n");
+        }
+        
     }
-}
+} // End handle_add_command
 
-// Checks the passed in args for if there is a valid command to be executed
-// If so, it'll call the appropriate function to handle it
-// Otherwise it'll print the expected usage for the program
+/* 
+ Checks the passed in args for if there is a valid command to be executed
+ If so, it'll call the appropriate function to handle it
+ Otherwise it'll print the expected usage for the program
+*/
 void check_args_for_command(int num_args, char *args[])
 {
     int ip_fd = get_ip_fd();
+    
+    // Check if user is using debug mdoe with no additional commands
+    if (args[ARGS_EXPECTED_COMMAND_POS] == NULL)
+    {
+        if (logPtr != NULL)
+        {
+          fprintf(logPtr, "\nPlease use debug mode in conjunction with other commands\n");
+        }
+        else 
+        {
+          printf("\nPlease use debug mode in conjunction with other commands\n");
+        }
+        exit(1);
+    }
 
-    // Check the command that was passed in the args
-    // If there was a command, call the appropriate function to handle it, otherwise
-    // print the expected usage for this program 
+    /* 
+     Check the command that was passed in the args
+     If there was a command, call the appropriate function to handle it, otherwise
+     print the expected usage for this program 
+    */
     if (strcmp(args[ARGS_EXPECTED_COMMAND_POS], ADD_IN_POLICY) == 0) 
     {
         handle_add_command(num_args, args, INGOING_PACKET, ip_fd);
@@ -576,11 +760,15 @@ void check_args_for_command(int num_args, char *args[])
     {
         handle_print_command(num_args, args, ip_fd);
     } 
+    else if (strcmp(args[ARGS_EXPECTED_COMMAND_POS], TEST_POLICIES) == 0)
+    {
+        handle_test_command(num_args, args, ip_fd);
+    }
     else 
     {
         invalid_input();
     }
-}
+} // End check_args_for_command
 
 int main(int argc, char *argv[])
 {
@@ -589,7 +777,13 @@ int main(int argc, char *argv[])
         invalid_input();
     }
 
+    initLogging();
     check_args_for_command(argc, argv);
+    
+    if (logPtr != NULL)
+    {
+      fclose(logPtr);
+    }
 
     return(0);
-}
+} // End main
