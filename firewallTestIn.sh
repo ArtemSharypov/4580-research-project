@@ -116,6 +116,7 @@ minifirewall --delete 1 &>> $TEST_PATH
 printf "\nTest #8 Block packets if directed at specific port \n" 2>&1 | tee -a $TEST_PATH
 printf "\nminifirewall --in --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
 minifirewall --in --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
+printf "Blocked Port: " &>> $TEST_PATH
 (sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $TEST_PATH
 print_result
 printf "Using alternative port we get: " &>> $TEST_PATH
