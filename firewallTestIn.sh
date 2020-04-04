@@ -95,9 +95,9 @@ printf "\nminifirewall --in --proto ALL --action BLOCK\n" &>> $TEST_PATH
 minifirewall --in --proto ALL --action BLOCK
 ping -c 1 www.google.com &>> $EXTRA_LOGS
 print_result
-(sleep 5; echo"Succesfully Recieved the message" | nc -u -w 1 localhost 80) | nc -w 10 -u -l -p 80 $EXTRA_LOGS
+(sleep 5; echo"Succesfully Recieved the message" | nc -u -w 1 127.0.0.1 80) | nc -w 10 -u -l -p 80 $EXTRA_LOGS
 print_result
-(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 localhost 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
@@ -105,21 +105,21 @@ minifirewall --delete 1 &>> $TEST_PATH
 # Test #7
 printf "\n Progress...................30/100\n"
 printf "\nTest #7 Block specific incoming IP \n" 2>&1 | tee -a $TEST_PATH
-ping -c 1 127.0.0.2 &>> $TEST_PATH
-printf "\nminifirewall --in --srcip 127.0.0.2 --proto ALL --action BLOCK\n" &>> $TEST_PATH
-minifirewall --in --srcip 127.0.0.2 --proto ALL --action BLOCK &>> $TEST_PATH
-ping -c 1 127.0.0.2 &>> $TEST_PATH
+ping -c 1 127.0.0.1 &>> $TEST_PATH
+printf "\nminifirewall --in --srcip 127.0.0.1 --proto ALL --action BLOCK\n" &>> $TEST_PATH
+minifirewall --in --srcip 127.0.0.1 --proto ALL --action BLOCK &>> $TEST_PATH
+ping -c 1 127.0.0.1 &>> $TEST_PATH
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 # Test #8
 printf "\nTest #8 Block packets if directed at specific port \n" 2>&1 | tee -a $TEST_PATH
-printf "\nminifirewall --in --srcip 127.0.0.2 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
-minifirewall --in --srcip 127.0.0.2 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
-(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 localhost 80) | nc -w 10 -l -p 80 &>> $TEST_PATH
+printf "\nminifirewall --in --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
+minifirewall --in --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $TEST_PATH
 print_result
 printf "Using alternative port we get: " &>> $TEST_PATH
-(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 localhost 90) | nc -w 10 -l -p 90 &>> $TEST_PATH
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 90) | nc -w 10 -l -p 90 &>> $TEST_PATH
 print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
@@ -128,21 +128,21 @@ minifirewall --delete 1 &>> $TEST_PATH
 printf "\n Progress...................42/100\n"
 printf "\nTest #9 Test blockage of incoming masked IP Address \n" 2>&1 | tee -a $TEST_PATH
 ping -c 1 255.255.255.255 &>> $TEST_PATH
-printf "\nminifirewall --in --srcip 127.0.0.2 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK\n" &>> $TEST_PATH
-minifirewall --in --srcip 127.0.0.2 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK &>> $TEST_PATH
+printf "\nminifirewall --in --srcip 127.0.0.1 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK\n" &>> $TEST_PATH
+minifirewall --in --srcip 127.0.0.1 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK &>> $TEST_PATH
 ping -c 1 255.255.255.255 &>> $TEST_PATH
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 # Test #10
 printf "\nTest #10 Test Unblock incoming packet policy \n" 2>&1 | tee -a $TEST_PATH
-printf "\nminifirewall --in --srcip 127.0.0.2 --proto TCP --action BLOCK\n" &>> $TEST_PATH
-minifirewall --in --srcip 127.0.0.2 --proto TCP --action BLOCK &>> $TEST_PATH
-(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.2 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
+printf "\nminifirewall --in --srcip 127.0.0.1 --proto TCP --action BLOCK\n" &>> $TEST_PATH
+minifirewall --in --srcip 127.0.0.1 --proto TCP --action BLOCK &>> $TEST_PATH
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
-printf "\nminifirewall --in --srcip 127.0.0.2 --proto TCP --action UNBLOCK\n" &>> $TEST_PATH
-minifirewall --in --srcip 127.0.0.2 --proto TCP --destport 80 --action UNBLOCK &>> $TEST_PATH
-(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.2 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
+printf "\nminifirewall --in --srcip 127.0.0.1 --proto TCP --action UNBLOCK\n" &>> $TEST_PATH
+minifirewall --in --srcip 127.0.0.1 --proto TCP --destport 80 --action UNBLOCK &>> $TEST_PATH
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
