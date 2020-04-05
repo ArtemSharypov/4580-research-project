@@ -155,8 +155,8 @@ void handle_test_command(int num_args, char *args[], int ip_fd)
    }
     
    // Run the test suite
-   system(" bash ./firewallTestIn.sh");
-   system(" bash ./firewallTestOut.sh");
+   system(" bash /usr/src/minix/commands/minifirewall/firewallTestIn.sh");
+   system(" bash /usr/src/minix/commands/minifirewall/firewallTestOut.sh");
 } // End handle_test_command
 
 /* 
@@ -165,7 +165,7 @@ void handle_test_command(int num_args, char *args[], int ip_fd)
 */
 void initLogging()
 {
-  logPtr = fopen("testResults/firewallLogs.txt", "a+");
+  logPtr = fopen("/usr/src/minix/commands/minifirewall/testResults/firewallLogs.txt", "a+");
   if(logPtr == NULL) 
   {
    printf("\nCould not open or find the log file for minifirewall. \n"); 
