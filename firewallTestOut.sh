@@ -68,20 +68,31 @@ printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 # Test #5
-printf "\nTest #5 Test blockage of outgoing IP Address \n" 2>&1 | tee -a $TEST_PATH
+printf "\nTest #5 Test blockage of outgoing source IP Address \n" 2>&1 | tee -a $TEST_PATH
 printf "\n Progress...................77/100\n"
-ping -c 1 127.0.0.1 &>> $TEST_PATH
-printf "\nminifirewall --out --srcip 127.0.0.1 --proto ALL --action BLOCK\n" &>> $TEST_PATH
-minifirewall --out --srcip 127.0.0.1 --proto ALL --action BLOCK &>> $TEST_PATH
-ping -c 1 127.0.0.1 &>> $TEST_PATH
+ping -c 1 10.0.2.15 &>> $TEST_PATH
+printf "\nminifirewall --out --srcip 10.0.2.15 --proto ALL --action BLOCK\n" &>> $TEST_PATH
+minifirewall --out --srcip 10.0.2.15 --proto ALL --action BLOCK &>> $TEST_PATH
+ping -c 1 10.0.2.15 &>> $TEST_PATH
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 # Test #6
-printf "\nTest #6 Block outgoing packets if directed at specific port \n" 2>&1 | tee -a $TEST_PATH
+printf "\nTest #6 Test blockage of outgoing destination IP Address \n" 2>&1 | tee -a $TEST_PATH
+printf "\n Progress...................77/100\n"
+printf "\nminifirewall --out --destip 127.0.0.1 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
+minifirewall --out --destip 127.0.0.1 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
+printf "\nBlocked port: \n" &>> $TEST_PATH
+(sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $TEST_PATH
+print_result
+printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
+minifirewall --delete 1 &>> $TEST_PATH
+###############################################################################################
+# Test #7
+printf "\nTest #7 Block outgoing packets if directed at specific port \n" 2>&1 | tee -a $TEST_PATH
 printf "\n Progress...................84/100\n"
-printf "\nminifirewall --out --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
-minifirewall --out --srcip 127.0.0.1 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
+printf "\nminifirewall --out --srcip 10.0.2.15 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
+minifirewall --out --srcip 10.0.2.15 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
 printf "\nBlocked port: \n" &>> $TEST_PATH
 (sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 127.0.0.1 80) | nc -w 10 -l -p 80 &>> $TEST_PATH
 print_result
@@ -91,18 +102,18 @@ print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
-# Test #7
-printf "\nTest #7 Test blockage of outgoing masked IP Address \n" 2>&1 | tee -a $TEST_PATH
+# Test #8
+printf "\nTest #8 Test blockage of outgoing masked IP Address \n" 2>&1 | tee -a $TEST_PATH
 printf "\n Progress...................88/100\n"
 ping -c 1 255.255.255.255 &>> $TEST_PATH
-printf "\nminifirewall --out --srcip 127.0.0.1 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK\n" &>> $TEST_PATH
-minifirewall --out --srcip 127.0.0.1 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK &>> $TEST_PATH
+printf "\nminifirewall --out --srcip 10.0.2.15 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK\n" &>> $TEST_PATH
+minifirewall --out --srcip 10.0.2.15 --srcnetmask 255.255.255.255 --proto ALL --action BLOCK &>> $TEST_PATH
 ping -c 1 255.255.255.255 &>> $TEST_PATH
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
-# Test #8
-printf "\nTest #8 Test Unblock outgoing policy \n" 2>&1 | tee -a $TEST_PATH
+# Test #9
+printf "\nTest #9 Test Unblock outgoing policy \n" 2>&1 | tee -a $TEST_PATH
 printf "\n Progress...................95/100\n"
 printf "\nminifirewall --out --proto TCP --action BLOCK\n" &>> $TEST_PATH
 minifirewall --out --proto TCP --action BLOCK &>> $TEST_PATH
