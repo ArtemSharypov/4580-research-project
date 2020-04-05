@@ -5,6 +5,8 @@ Topic: Firewalls
 
 In addition to rsearch on the topic, the main deliverable for this project is the completion of the following SEED seceurity lab: http://www.cis.syr.edu/~wedu/seed/Labs_12.04/Networking/Firewall_Minix/Firewall_Minix.pdf
 
+From the syracruse university SEED lab prompt: "In this lab, students need to implement a packet filter for Minix. We will call it minifirewall. This firewall consists of two components: policy configuration and packet filtering."
+
 For detailed information on the topic please refer to our project report included in this repository.
 We had a lot of completing this lab and I hope you enjoy the content we've provided :) 
 
