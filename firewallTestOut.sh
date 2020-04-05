@@ -114,6 +114,8 @@ minifirewall --out --srcip 127.0.0.1 --proto TCP --destport 80 --action UNBLOCK 
 print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
+printf "\nminifirewall --delete 2\n" &>> $TEST_PATH
+minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 printf "\n Progress...................100/100\n"
 printf "\n\n\n" &>> $TEST_PATH
