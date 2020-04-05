@@ -1,10 +1,10 @@
 #!/bin/sh
 # Run the minifirewall test suite
 # Test print minifirewall
-readonly TEST_PATH=testResults/testTerminalOutputOut.txt
-readonly EXTRA_LOGS=testResults/extraLogs.txt
-rm TEST_PATH
-rm EXTRA_LOGS
+readonly TEST_PATH=/usr/src/minix/commands/minifirewall/testResults/testTerminalOutputOut.txt
+readonly EXTRA_LOGS=/usr/src/minix/commands/minifirewall/testResults/extraLogs.txt
+rm $TEST_PATH
+rm $EXTRA_LOGS
 ###############################################################################################
 print_result() {
   if [ $? == 0 ]; then 
@@ -37,7 +37,7 @@ printf "\n Progress...................64/100\n"
 print_result
 printf "\nminifirewall --out --proto UDP --action BLOCK\n" &>> $TEST_PATH
 minifirewall --out --proto UDP --action BLOCK
-(sleep 5; echo"Succesfully Recieved the message" | nc -u -w 1 localhost 80) | nc -w 10 -u -l -p 80 $EXTRA_LOGS
+(sleep 5; echo "Succesfully Recieved the message" | nc -u -w 1 localhost 80) | nc -w 10 -u -l -p 80 $>> $EXTRA_LOGS
 print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
@@ -60,7 +60,7 @@ printf "\nminifirewall --out --proto ALL --action BLOCK\n" &>> $TEST_PATH
 minifirewall --out --proto ALL --action BLOCK
 ping -c 1 localhost &>> $EXTRA_LOGS
 print_result
-(sleep 5; echo"Succesfully Recieved the message" | nc -u -w 1 localhost 80) | nc -w 10 -u -l -p 80 $EXTRA_LOGS
+(sleep 5; echo "Succesfully Recieved the message" | nc -u -w 1 localhost 80) | nc -w 10 -u -l -p 80 $>> $EXTRA_LOGS
 print_result
 (sleep 5; echo "Succesfully Recieved the TCP message" | nc -w 1 localhost 80) | nc -w 10 -l -p 80 &>> $EXTRA_LOGS
 print_result
@@ -79,7 +79,6 @@ minifirewall --delete 1 &>> $TEST_PATH
 ###############################################################################################
 # Test #6
 printf "\nTest #6 Test blockage of outgoing destination IP Address \n" 2>&1 | tee -a $TEST_PATH
-printf "\n Progress...................77/100\n"
 printf "\nminifirewall --out --destip 127.0.0.1 --proto TCP --destport 80 --action BLOCK\n" &>> $TEST_PATH
 minifirewall --out --destip 127.0.0.1 --proto TCP --destport 80 --action BLOCK &>> $TEST_PATH
 printf "\nBlocked port: \n" &>> $TEST_PATH
@@ -131,4 +130,4 @@ minifirewall --delete 1 &>> $TEST_PATH
 printf "\n Progress...................100/100\n"
 printf "\n\n\n" &>> $TEST_PATH
 printf "\n Output tests completed view in /testResults/testTerminalOutputOut.txt\n"
-printf "\n All tests completed thank you for your patience! :)"
+printf "\n All tests completed thank you for your patience! :)\n"
