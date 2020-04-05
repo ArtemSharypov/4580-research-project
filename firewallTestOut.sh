@@ -115,7 +115,7 @@ print_result
 printf "\nminifirewall --delete 1\n" &>> $TEST_PATH
 minifirewall --delete 1 &>> $TEST_PATH
 printf "\nminifirewall --delete 2\n" &>> $TEST_PATH
-minifirewall --delete 1 &>> $TEST_PATH
+minifirewall --delete 2 &>> $TEST_PATH
 ###############################################################################################
 printf "\n Progress...................100/100\n"
 printf "\n\n\n" &>> $TEST_PATH
